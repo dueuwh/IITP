@@ -733,7 +733,6 @@ class feature_extraction:
             features[emotion] = {}
             for feature_name in self.feature_list:
                 features[emotion][feature_name] = locals()[feature_name]
-        
         return features
 
 
