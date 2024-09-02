@@ -135,7 +135,6 @@ def ppg_loader4deap(base_dir, file_name):
 
 def rppg_loader4deap(file_name):
     pass
-
  
 
 def D3Scatter(class_num, border_points,
@@ -360,7 +359,7 @@ def clear_emotion(left_b_point, right_u_point, remote):
                     clear_ppg.append(deap_dataset["data"][i, 38, :])
                 s_num += 1
     
-    save_name = str(left_b_point[0]) + '_' + str(left_b_point[1]) + '_' + str(right_u_point[0]) + '_' + str(right_u_point[1]) + ".csv"
+    save_name = (f"{int(left_b_point[0]*10)}_{int(left_b_point[1]*10)}_{int(right_u_point[0]*10)}_{int(right_u_point[1]*10)}.csv")
     clear_label_df = pd.DataFrame(clear_label)
     clear_label_df.to_csv(label_folder + save_name)
     
@@ -542,21 +541,21 @@ def split_2class(features, label, test_size, random_state):
     y_train = y_train.reset_index(drop=True)
     y_test = y_test.reset_index(drop=True)
     
-    return X_train, X_test, y_train, y_test, len(y_test_positive), len(y_test_negative)
+    return X_train, X_test, y_train, y_test, (len(y_test_positive), len(y_test_negative))
 
 
 def splitbylabel(features, label, test_size, num_class, random_state):
     if num_class == 4:
-        x_train, x_test, y_train, y_test, n_yth, n_ytc, n_yta, n_yts = split_4class(features, label, test_size, random_state)
-        return x_train, x_test, y_train, y_test, (n_yth, n_ytc, n_yta, n_yts)
+        x_train, x_test, y_train, y_test, dataset_size = split_4class(features, label, test_size, random_state)
+        return x_train, x_test, y_train, y_test, dataset_size
         
     if num_class == 3:
-        x_train, x_test, y_train, y_test, n_ytpositive, n_ytneutral, n_ytnegative = split_3class(features, label, test_size, random_state)
-        return x_train, x_test, y_train, y_test, (n_ytpositive, n_ytneutral, n_ytnegative)
+        x_train, x_test, y_train, y_test, dataset_size = split_3class(features, label, test_size, random_state)
+        return x_train, x_test, y_train, y_test, dataset_size
     
     if num_class == 2:
-        x_train, x_test, y_train, y_test, n_ytp, n_ytn = split_2class(features, label, test_size, random_state)
-        return x_train, x_test, y_train, y_test, (n_ytp, n_ytn)
+        x_train, x_test, y_train, y_test, dataset_size = split_2class(features, label, test_size, random_state)
+        return x_train, x_test, y_train, y_test, dataset_size
 
 def cal_precision(y_pred, y_test, label_class):
     
@@ -591,15 +590,7 @@ def cal_recall(y_pred, y_test, label_class):
     return tp / (tp + fn)
 
 
-def rf(features, label, num_class):
-    X_train, X_test, y_train, y_test, dataset_size = splitbylabel(features, label, test_size=0.2, num_class=num_class, random_state=42)
-    
-    rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
-
-    rf_classifier.fit(X_train, y_train)
-    y_pred = rf_classifier.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    
+def classnum4performance(y_pred, y_test):
     happy_precision = round(cal_precision(y_pred, y_test, 0), 2)
     calm_precision = round(cal_precision(y_pred, y_test, 1), 2)
     anger_precision = round(cal_precision(y_pred, y_test, 2), 2)
@@ -609,9 +600,52 @@ def rf(features, label, num_class):
     calm_recall = round(cal_recall(y_pred, y_test, 1), 2)
     anger_recall = round(cal_recall(y_pred, y_test, 2), 2)
     sadness_recall = round(cal_recall(y_pred, y_test, 3), 2)
-    
-    return y_pred, X_test, y_test, accuracy, (happy_precision, happy_recall), (calm_precision, calm_recall), (anger_precision, anger_recall), (sadness_precision, sadness_recall), dataset_size
 
+    return (happy_precision, happy_recall), (calm_precision, calm_recall), (anger_precision, anger_recall), (sadness_precision, sadness_recall)
+
+    
+def classnum3performance(y_pred, y_test):
+    positive_precision = round(cal_precision(y_pred, y_test, 0), 2)
+    neutral_precision = round(cal_precision(y_pred, y_test, 1), 2)
+    negative_precision = round(cal_precision(y_pred, y_test, 2), 2)
+    
+    positive_recall = round(cal_recall(y_pred, y_test, 0), 2)
+    neutral_precision = round(cal_recall(y_pred, y_test, 1), 2)
+    negative_recall = round(cal_recall(y_pred, y_test, 2), 2)
+    
+    return (positive_precision, positive_recall), (neutral_precision, neutral_recall), (negative_precision, negative_recall)
+
+def classnum2performance(y_pred, y_test):
+    positive_precision = round(cal_precision(y_pred, y_test, 0), 2)
+    negative_precision = round(cal_precision(y_pred, y_test, 1), 2)
+    
+    positive_recall = round(cal_recall(y_pred, y_test, 0), 2)
+    negative_recall = round(cal_recall(y_pred, y_test, 1), 2)
+    
+    return (positive_precision, positive_recall), (negative_precision, negative_recall)
+
+
+
+def rf(features, label, num_class):
+    X_train, X_test, y_train, y_test, dataset_size = splitbylabel(features, label, test_size=0.2, num_class=num_class, random_state=42)
+    
+    rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+
+    rf_classifier.fit(X_train, y_train)
+    y_pred = rf_classifier.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    
+    if num_class == 4:
+        happy, calm, anger, sadness = classnum4performance(y_pred, y_test)
+        return y_pred, y_test, accuracy, happy, calm, anger, sadness, dataset_size
+    
+    elif num_class == 3:
+        positive, neutral, negative = classnum3performance(y_pred, y_test)
+        return y_pred, y_test, accuracy, positive, neutral, negative, dataset_size
+    
+    else:
+        positive, negative = classnum2performance(y_pred, y_test)
+        return y_pred, y_test, accuracy, positive, negative, dataset_size
 
 def SHAP(features, label, num_class):
     
@@ -629,21 +663,29 @@ def SHAP(features, label, num_class):
     explainer = shap.Explainer(model, X_train)
     shap_values = explainer(X_test)
 
-    rankings = np.zeros((shap_values.shape[1], shap_values.shape[-1]))
-    for i in range(shap_values.shape[-1]):
-        shap.plots.beeswarm(shap_values[:, :, i], max_display=12)
+    rankings = np.zeros((shap_values.values.shape[1], shap_values.values.shape[-1]))
     
-    for i in range(shap_values.shape[-1]):
-        mean_abs_shap_values = np.mean(np.abs(shap_values[:, :, i]), axis=0)
-
-        sorted_indices = np.argsort(mean_abs_shap_values)[::-1]
-        for rank, index in enumerate(sorted_indices):
-            rankings[index, class_index] = rank
-
-    average_rankings = np.mean(rankings, axis=1)
-    sorted_indices_by_avg_rank = np.argsort(average_rankings)
-    sorted_parameters_by_avg_rank = [X_test.columns[i] for i in sorted_indices_by_avg_rank]
+    # print(f"\n\n\nshap_values shape: {shap_values.shape}\n\n\n")
+    # print(f"\n\n\nshap_values.values shape: {shap_values.values.shape}\n\n\n")
     
+    if len(shap_values.values.shape)>=3:
+        for i in range(shap_values.values.shape[-1]):
+            shap.plots.beeswarm(shap_values[:, :, i], max_display=12)
+        
+        for i in range(shap_values.values.shape[-1]):
+            mean_abs_shap_values = np.mean(np.abs(shap_values.values[:, :, i]), axis=0)
+    
+            sorted_indices = np.argsort(mean_abs_shap_values)[::-1]
+            for rank, index in enumerate(sorted_indices):
+                rankings[index, class_index] = rank
+        average_rankings = np.mean(rankings, axis=1)
+        sorted_indices_by_avg_rank = np.argsort(average_rankings)
+        sorted_parameters_by_avg_rank = [X_test.columns[i] for i in sorted_indices_by_avg_rank]
+    else:
+        shap.plots.beeswarm(shap_values, max_display=12)
+        sorted_indices = np.argsort(np.mean(np.abs(shap_values.values), axis=0)))
+        sorted_parameters_by_avg_rank = [X_test.columns[i]]
+        
     good10 = sorted_parameters_by_avg_rank[0:10]
 
     X_train = X_train.loc[:, good10]
@@ -655,27 +697,16 @@ def SHAP(features, label, num_class):
     y_pred = model.predict(X_test)
     
     if num_class == 4:
-        happy_precision = round(cal_precision(y_pred, y_test, 0), 2)
-        calm_precision = round(cal_precision(y_pred, y_test, 1), 2)
-        anger_precision = round(cal_precision(y_pred, y_test, 2), 2)
-        sadness_precision = round(cal_precision(y_pred, y_test, 3), 2)
-        
-        happy_recall = round(cal_recall(y_pred, y_test, 0), 2)
-        calm_recall = round(cal_recall(y_pred, y_test, 1), 2)
-        anger_recall = round(cal_recall(y_pred, y_test, 2), 2)
-        sadness_recall = round(cal_recall(y_pred, y_test, 3), 2)
+        happy, calm, anger, sadness = classnum4performance(y_pred, y_test)
+        return y_test, y_pred, happy, calm, anger, sadness, dataset_size, good10
     
-        return accuracy, (happy_precision, happy_recall), (calm_precision, calm_recall), (anger_precision, anger_recall), (sadness_precision, sadness_recall), y_pred, y_test, dataset_size, good10
     elif num_class == 3:
-        pass
+        positive, neutral, negative = classnum3performance(y_pred, y_test)
+        return y_test, y_pred, positive, neutral, negative, dataset_size, good10
+    
     else:
-        positive_precision = round(cal_precision(y_pred, y_test, 0), 2)
-        negative_precision = round(cal_precision(y_pred, y_test, 1), 2)
-        
-        positive_recall = round(cal_recall(y_pred, y_test, 0), 2)
-        negative_recall = round(cal_recall(y_pred, y_test, 1), 2)
-        
-        return accuracy, (positive_precision, positive_recall), (negative_precision, negative_recall)
+        positive, negative = classnum2performance(y_pred, y_test)
+        return y_test, y_pred, positive, negative, dataset_size, good10
 
 
 def test(base_dir, file_name, num_class, remote=True):
@@ -719,50 +750,96 @@ def test(base_dir, file_name, num_class, remote=True):
         # print(f"\n\nfeatures.shape: {features.shape}, label.shape: {label.shape}\n\n")
         
         # print(f"label:\n{label}")
-        
-    xgboost_acc, happy_xg, calm_xg, anger_xg, sadness_xg, y_pred_xg, y_test_xg, test_size_xg, good10 = SHAP(features, label, num_class=num_class)
-    
-    features = features.loc[:, good10]
-    
-    y_pred, X_test, y_test, accuracy, happy, calm, anger, sadness, test_size = rf(features, label, num_class=num_class)
-    
-    cm = confusion_matrix(y_test, y_pred)
-    
-    cm_xg = confusion_matrix(y_test_xg, y_pred_xg)
-    
-    emotions = ["happy", "calm", "anger", "sadness"]
     
     performance_y_label = ["Precision", "Recall"]
     
-    xg_total = [happy_xg, calm_xg, anger_xg, sadness_xg]
-    rf_total = [happy, calm, anger, sadness]
+    if class_num == 4:
+        y_test_xg, y_pred_xg, happy_xg, calm_xg, anger_xg, sadness_xg, test_size_xg, good10 = SHAP(features, label, num_class=num_class)
+        features = features.loc[:, good10]
+        y_pred, y_test, accuracy, happy, calm, anger, sadness, test_size = rf(features, label, num_class=num_class)
+        
+        cm = confusion_matrix(y_test, y_pred)
+        cm_xg = confusion_matrix(y_test_xg, y_pred_xg)
+        
+        emotions = ["happy", "calm", "anger", "sadness"]
+        
+        xg_total = [happy_xg, calm_xg, anger_xg, sadness_xg]
+        rf_total = [happy, calm, anger, sadness]
+        
+        xg_title = (f"Parameters\n{good10[0:5]}\n{good10[5:]}\n\nXGBoost result"
+                    f"\ntest size Happy: {test_size_xg[0]} Calm: {test_size_xg[1]} Anger: {test_size_xg[2]} Sadness: {test_size_xg[3]}")
+        
+        rf_title = (f"Random Forest result"
+                    f"\ntest size Happy: {test_size[0]} Calm: {test_size[1]} Anger: {test_size[2]} Sadness: {test_size[3]}")
+        
+        performance_array = np.array([[happy, calm, anger, sadness], [happy_xg, calm_xg, anger_xg, sadness_xg]])
+        
+    elif class_num == 3:
+        y_test_xg, y_pred_xg, positive_xg, neutral_xg, negative_xg, test_size_xg, good10 = SHAP(features, label, num_class=num_class)
+        features = features.loc[:, good10]
+        y_pred, y_test, accuracy, positive, neutral, negative, test_size = rf(features, label, num_class=num_class)
+    
+        cm = confusion_matrix(y_test, y_pred)
+        cm_xg = confision_matrix(y_test_xg, y_pred_xg)
+        
+        emotions = ["positive", "neutral", "negative"]
+        
+        xg_total = [positive_xg, neutral_xg, negative_xg]
+        rf_total = [positive, neutral, negative]
+        
+        xg_title = (f"Parameters\n{good10[0:5]}\n{good10[5:]}\n\nXGBoost result"
+                    f"\ntest size Positive: {test_size_xg[0]} Neutral: {test_size_xg[1]} Negative: {test_size_xg[2]}")
+        
+        rf_title = (f"Random Forest result"
+                    f"\ntest size Positive: {test_size[0]} Neutral: {test_size[1]} Negative: {test_size[2]}")
+        
+        performance_array = np.array([[positive, neutral, negative], [positive_xg, neutral_xg, negative_xg]])
+    
+    else:
+        y_test_xg, y_pred_xg, positive_xg, negative_xg, test_size_xg, good10 = SHAP(features, label, num_class=num_class)
+        features = features.loc[:, good10]
+        y_pred, y_test, accuracy, positive, negative, test_size = rf(features, label, num_class=num_class)
+    
+        cm = confusion_matrix(y_test, y_pred)
+        cm_xg = confusion_matrix(y_test_xg, y_pred_xg)
+        
+        emotions = ["positive", "negative"]
+        
+        xg_total = [positive_xg, negative_xg]
+        rf_total = [positive, negative]
+        
+        
+        xg_title = (f"Paramters\n{good10[0:5]}\n{good10[5:]}\n\nXGBoost result"
+                    f"\ntest size Positive: {test_size_xg[0]} Negative: {test_size_xg[1]}")
+        
+        rf_title = (f"Random Forest result"
+                    f"\ntest size Positive: {test_size[0]} Negative: {test_size[1]}")
+    
+        performance_array = np.array([[positive, negative], [positive_xg, negative_xg]])
+    
     
     fig, ax = plt.subplots(2, 2, figsize=(15, 20))
     sns.heatmap(cm, ax=ax[0, 0], fmt='d', cmap='Blues', annot=True, xticklabels=emotions, yticklabels=emotions)
     sns.heatmap(cm_xg, ax=ax[1, 0], fmt='d', cmap='Blues', annot=True, xticklabels=emotions, yticklabels=emotions)
-    # ax[0].heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=emotions, yticklabels=emotions)
-    # ax[1].heatmap(cm_xg, annot=True, fmt='d', cmap='Blues', xticklabels=emotions, yticklabels=emotions)
-    ax[1, 0].set_title(f"Parameters\n{good10[0:5]}\n{good10[5:]}\n\nXGBoost result"
-                    + f"\ntest size Happy: {test_size_xg[0]} Calm: {test_size_xg[1]} Anger: {test_size_xg[2]} Sadness: {test_size_xg[3]}")
-    ax[0, 0].set_title(f"Random Forest result"
-                    + f"\ntest size Happy: {test_size[0]} Calm: {test_size[1]} Anger: {test_size[2]} Sadness: {test_size[3]}")
     
-    c1 = ax[0, 1].imshow(np.array([[happy[0], calm[0], anger[0], sadness[0]],
-                                   [happy[1], calm[1], anger[1], sadness[1]]]),
-                         cmap='Oranges')
+    ax[1, 0].set_title(xg_title)
+    
+    ax[0, 0].set_title(rf_title)
+    
+    c1 = ax[0, 1].imshow(performance_array[:, :, 0], cmap='Oranges')
+    
+    c2 = ax[1, 1].imshow(performance_array[:, :, 1], cmap='Oranges')
     
     ax[0, 1].set_title("Random Forest Performance")
     fig.colorbar(c1, ax=ax[0, 1])
     
-    c2 = ax[1, 1].imshow(np.array([[happy_xg[0], calm_xg[0], anger_xg[0], sadness_xg[0]],
-                                   [happy_xg[1], calm_xg[1], anger_xg[1], sadness_xg[1]]]),
-                         cmap='Oranges')
+    ax[1, 1].set_title("XGBoost Performance")
+    fig.colorbar(c2, ax=ax[1, 1])
+    
     for i in range((len(emotions))):
         for j in range(len(performance_y_label)):
             ax[0, 1].text(i, j, f"{xg_total[i][j]}", ha='center', va='center', color='black')
             ax[1, 1].text(i, j, f"{rf_total[i][j]}", ha='center', va='center', color='black')
-    ax[1, 1].set_title("XGBoost Performance")
-    fig.colorbar(c2, ax=ax[1, 1])
     
     ax[0, 1].set_xticks(np.arange(len(emotions)))
     ax[0, 1].set_xticklabels(emotions)
@@ -823,6 +900,10 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
                             |
                             |
                             |
+                
+                Reference:
+                https://dl.acm.org/doi/pdf/10.1145/3297156.3297177
+                Emotion Classification Using EEG siganls
     """
     criterion = []
     
@@ -956,7 +1037,7 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
             base_dir = "D:/home/BCML/IITP/data/DEAP/clear_emotion_3class/"
         if class_num == 4 and not emotionless:
             clear_emotion(border[0], border[1], remote=False)
-            file_name = f"{int(border[0]*10)}_{int(border[1]*10)}.csv"
+            file_name = f"{int(border[0][0]*10)}_{int(border[0][1]*10)}_{int(border[1][0]*10)}_{int(border[1][1]*10)}.csv"
             base_dir = "D:/home/BCML/IITP/data/DEAP/clear_emotion/"
         
         y_pred, y_test, accuracy = test(base_dir, file_name, num_class=class_num, remote=remote)
