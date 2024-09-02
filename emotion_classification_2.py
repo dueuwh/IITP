@@ -1,8 +1,9 @@
 import os
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
+import matplotlib.patches as patches
 import pickle
 import numpy as np
-from matplotlib.colors import Normalize
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import pandas as pd
 import neurokit2 as nk
@@ -123,8 +124,7 @@ def cube(ax, point1, point2, color):
                     alpha=0.2, color=color)
 
 
-def ppg_loader4deap(file_name):
-    base_dir = "D:/home/BCML/IITP/data/DEAP/clear_emotion/"
+def ppg_loader4deap(base_dir, file_name):
     ppg = pd.read_csv(base_dir + "ppg/" + file_name, index_col=0)
     label = pd.read_csv(base_dir + "label/" + file_name, index_col=0)
     
@@ -174,25 +174,25 @@ def D3Scatter(class_num, border_points,
     scatter = ax.scatter(total_valence, total_arousal, total_dominance, s=50, c=colors, alpha=0.6)
     
     if class_num == 2:
-        cube(ax, [0, 0, 0], [8, 8, criterion_small], 'g')
-        cube(ax, [0, 0, criterion_big], [8, 8, 8], 'r')
+        cube(ax, border_points["positive"][0], border_points["positive"][1], 'r')
+        cube(ax, border_points["negative"][0], border_points["negative"][1], 'b')
     
     elif class_num == 3:
-        cube(ax, [0, 0, 0], [8, 8, criterion_small], 'r')
-        cube(ax, [0, 0, mid1], [8, 8, mid2], 'g')
-        cube(ax, [0, 0, criterion_big], [8, 8, 8], 'b')
+        cube(ax, border_points["positive"][0], border_points["positive"][1], 'r')
+        cube(ax, border_points["neutral"][0], border_points["neutral"][1], 'g')
+        cube(ax, border_points["negative"][0], border_points["negative"][1], 'b')
     
     elif class_num == 4:
         cube(ax, border_points["happy"][0], border_points["happy"][1], 'r')
         cube(ax, border_points["anger"][0], border_points["anger"][1], 'm')
-        cube(ax, border_poitns["sadness"][0], border_poitns["sadness"][1], 'b')
-        cube(ax, border_poitns["calm"][0], border_poitns["calm"][1] 'g')
+        cube(ax, border_points["sadness"][0], border_points["sadness"][1], 'b')
+        cube(ax, border_points["calm"][0], border_points["calm"][1], 'g')
     
-    ax.view_init(elev=30, azim=45)
+    ax.view_init(elev=25, azim=-30, vertical_axis='y')
     
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 10)
-    ax.set_zlim(0, 10)
+    ax.set_xlim(-1, 11)
+    ax.set_ylim(-1, 11)
+    ax.set_zlim(-1, 11)
     
     ax.set_title(title)
     ax.set_xlabel("Valence (X)")
@@ -258,13 +258,19 @@ def clear_emotion_binary(criterion_small, criterion_big, remote):
         clear_ppg_df = pd.DataFrame(clear_ppg)
         clear_ppg_df.to_csv(ppg_folder + f"{int(criterion_small*10)}_{int(criterion_big*10)}.csv")
     
-    title=f"DEAP dataset label distribution ({criterion_small}, {criterion_big})\nRED: Positive-{p_num} Negative-{n_num}"
+    scatter_title = (f"DEAP dataset label distribution\n"
+                     f"Negative < {criterion_small}, Positive > {criterion_big}\n"
+                     f"RED: Positive-{p_num}, BLUE: Negative-{n_num}")
     
-    D3Scatter(class_num=2, criterion_small=criterion_small, mid1=None, mid2=None, criterion_big=criterion_big,
+    border_points = {}
+    border_points["positive"] = [[criterion_big, 0, 0], [9, 9, 9]]
+    border_points["negative"] = [[0, 0, 0], [criterion_small, 9, 9]]
+    
+    D3Scatter(class_num=2, border_points=border_points,
               total_arousal=total_arousal,
               total_dominance=total_dominacne,
               total_valence=total_valence,
-              title=title)
+              title=scatter_title)
 
 
 def clear_emotion_3classes(criterion_small, mid_1, mid_2, criterion_big, remote):
@@ -356,7 +362,7 @@ def clear_emotion(left_b_point, right_u_point, remote):
     
     save_name = str(left_b_point[0]) + '_' + str(left_b_point[1]) + '_' + str(right_u_point[0]) + '_' + str(right_u_point[1]) + ".csv"
     clear_label_df = pd.DataFrame(clear_label)
-    clear_label_df.to_csv(label_folder + save_name
+    clear_label_df.to_csv(label_folder + save_name)
     
     if remote:
         clear_rppg_df = pd.DataFrame(clear_ppg)
@@ -365,28 +371,27 @@ def clear_emotion(left_b_point, right_u_point, remote):
         clear_ppg_df = pd.DataFrame(clear_ppg)
         clear_ppg_df.to_csv(ppg_folder + save_name)
     
-    center_x = int(right_b_point[0] - left_b_point[0])
+    center_x = int(right_u_point[0] - left_b_point[0])
     center_y = int(right_u_point[1] - left_b_point[1])
-    margin = int(center_x - right_b_point[0])
+    margin = int(center_x - right_u_point[0])
     
-    scatter_title = f"DEAP dataset label distribution\n"+
-                     "Center: ({center_x}, {center_y}), Margin: {margin}\n"+
-                     "RED: Happy-{h_num}, GREEN: Calm-{c_num}, MAGENTA: Anger-{a_num}, BLUE: Sadness-{s_num}"
+    scatter_title = (f"DEAP dataset label distribution\n"
+                     f"Center: ({center_x}, {center_y}), Margin: {margin}\n"
+                     f"RED: Happy-{h_num}, GREEN: Calm-{c_num}, MAGENTA: Anger-{a_num}, BLUE: Sadness-{s_num}")
     
     border_points = {}
-    border_points["happy"] = [[right_u_point[0], right_u_point[1], 0], [8, 8, 8]]
-    border_points["anger"] = [[0, right_u_point[1], 0], [left_b_point[0], right_u_point[1], 8]]
-    border_points["sadness"] = [[left_b_point[0], left_b_point[1], 0], []]
-    border_points["calm"] = [[], []]
+    border_points["happy"] = [[right_u_point[0], right_u_point[1], 0], [9, 9, 9]]
+    border_points["anger"] = [[0, right_u_point[1], 0], [left_b_point[0], 9, 9]]
+    border_points["sadness"] = [[0, 0, 0], [left_b_point[0], left_b_point[1], 9]]
+    border_points["calm"] = [[right_u_point[0], 0, 0], [9, left_b_point[1], 9]]
     
-    D3Scatter(class_num=4, border_points,
+    D3Scatter(class_num=4, border_points=border_points,
               total_arousal=total_arousal,
               total_dominance=total_dominacne,
               total_valence=total_valence,
               title=scatter_title)
 
-
-def splitbylabel(features, label, test_size, random_state):
+def split_4class(features, label, test_size, random_state):
     happy_label = []
     calm_label = []
     anger_label = []
@@ -396,7 +401,7 @@ def splitbylabel(features, label, test_size, random_state):
     calm_ppg = []
     anger_ppg = []
     sadness_ppg = []
-    
+
     for i, value in enumerate(label.loc[:, '0']):
         if value == 0:
             happy_ppg.append(features.loc[i])
@@ -445,6 +450,114 @@ def splitbylabel(features, label, test_size, random_state):
     
     return X_train, X_test, y_train, y_test, (len(y_test_happy), len(y_test_calm), len(y_test_anger), len(y_test_sadness))
 
+def split_3class():
+    positive_label = []
+    neutral_label = []
+    negative_label = []
+    
+    positive_ppg = []
+    neutral_label = []
+    negative_ppg = []
+    
+    for i, value in enumerate(label.loc[:, '0']):
+        if value == 0:
+            positive_ppg.append(features.loc[i])
+            positive_label.append(value)
+        elif value == 1:
+            neutral_ppg.append(features.loc[i])
+            neutral_label.append(value)
+        else:
+            negative_ppg.append(features.loc[i])
+            neutral_label.append(value)
+    
+    save_columns = features.columns
+    
+    positive_ppg = pd.DataFrame(np.array(positive_ppg)).reset_index(drop=True)
+    neutral_ppg = pd.DataFrame(np.array(neutral_ppg)).reset_index(drop=True)
+    negative_ppg = pd.DataFrame(np.array(negative_ppg)).reset_index(drop=True)
+
+    positive_label = pd.Series(np.array(positive_label).reshape(-1,)).reset_index(drop=True)
+    neutral_label = pd.Series(np.array(neutral_label).reshape(-1,)).reset_index(drop=True)
+    negative_label = pd.Series(np.array(negative_label).reshape(-1,)).reset_index(drop=True)
+
+    x_train_positive, x_test_positive, y_train_positive, y_test_positive = train_test_split(positive_ppg, positive_label, test_size=test_size, random_state=random_state)
+    x_train_neutral, x_test_neutral, y_train_neutral, y_test_neutral = train_test_split(neutral_ppg, negative_label, test_size=test_size, random_state=random_state)
+    x_train_negative, x_test_negative, y_train_negative, y_test_negative = train_test_split(negative_ppg, negative_label, test_size=test_size, random_state=random_state)
+
+    X_train = pd.concat([x_train_positive, x_train_neutral, x_train_negative], axis=0)
+    X_test = pd.concat([x_test_positive, x_test_neutral, x_test_negative], axis=0)
+    y_train = pd.concat([y_train_positive, y_train_neutral, y_train_negative], axis=0)
+    y_test = pd.concat([y_test_positive, y_test_neutral, y_test_negative], axis=0)
+    
+    X_train.columns = save_columns
+    X_test.columns = save_columns
+    y_train.columns = [0]
+    y_test.columns = [0]
+    
+    X_train = X_train.reset_index(drop=True)
+    X_test = X_test.reset_index(drop=True)
+    y_train = y_train.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    
+    return X_train, X_test, y_train, y_test, (len(y_test_positive), len(y_test_neutral), len(y_test_negative))
+
+def split_2class(features, label, test_size, random_state):
+    positive_label = []
+    negative_label = []
+    
+    positive_ppg = []
+    negative_ppg = []
+    
+    for i, value in enumerate(label.loc[:, '0']):
+        if value == 0:
+            positive_ppg.append(features.loc[i])
+            positive_label.append(value)
+        elif value == 1:
+            negative_ppg.append(features.loc[i])
+            negative_label.append(value)
+    
+    save_columns = features.columns
+    
+    positive_ppg = pd.DataFrame(np.array(positive_ppg)).reset_index(drop=True)
+    negative_ppg = pd.DataFrame(np.array(negative_ppg)).reset_index(drop=True)
+
+    positive_label = pd.Series(np.array(positive_label).reshape(-1,)).reset_index(drop=True)
+    negative_label = pd.Series(np.array(negative_label).reshape(-1,)).reset_index(drop=True)
+
+    x_train_positive, x_test_positive, y_train_positive, y_test_positive = train_test_split(positive_ppg, positive_label, test_size=test_size, random_state=random_state)
+    x_train_negative, x_test_negative, y_train_negative, y_test_negative = train_test_split(negative_ppg, negative_label, test_size=test_size, random_state=random_state)
+
+    X_train = pd.concat([x_train_positive, x_train_negative], axis=0)
+    X_test = pd.concat([x_test_positive, x_test_negative], axis=0)
+    y_train = pd.concat([y_train_positive, y_train_negative], axis=0)
+    y_test = pd.concat([y_test_positive, y_test_negative], axis=0)
+    
+    X_train.columns = save_columns
+    X_test.columns = save_columns
+    y_train.columns = [0]
+    y_test.columns = [0]
+    
+    X_train = X_train.reset_index(drop=True)
+    X_test = X_test.reset_index(drop=True)
+    y_train = y_train.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    
+    return X_train, X_test, y_train, y_test, len(y_test_positive), len(y_test_negative)
+
+
+def splitbylabel(features, label, test_size, num_class, random_state):
+    if num_class == 4:
+        x_train, x_test, y_train, y_test, n_yth, n_ytc, n_yta, n_yts = split_4class(features, label, test_size, random_state)
+        return x_train, x_test, y_train, y_test, (n_yth, n_ytc, n_yta, n_yts)
+        
+    if num_class == 3:
+        x_train, x_test, y_train, y_test, n_ytpositive, n_ytneutral, n_ytnegative = split_3class(features, label, test_size, random_state)
+        return x_train, x_test, y_train, y_test, (n_ytpositive, n_ytneutral, n_ytnegative)
+    
+    if num_class == 2:
+        x_train, x_test, y_train, y_test, n_ytp, n_ytn = split_2class(features, label, test_size, random_state)
+        return x_train, x_test, y_train, y_test, (n_ytp, n_ytn)
+
 def cal_precision(y_pred, y_test, label_class):
     
     tp = 0
@@ -477,8 +590,9 @@ def cal_recall(y_pred, y_test, label_class):
         return 0
     return tp / (tp + fn)
 
-def rf(features, label):
-    X_train, X_test, y_train, y_test, dataset_size = splitbylabel(features, label, test_size=0.2, random_state=42)
+
+def rf(features, label, num_class):
+    X_train, X_test, y_train, y_test, dataset_size = splitbylabel(features, label, test_size=0.2, num_class=num_class, random_state=42)
     
     rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
 
@@ -498,11 +612,12 @@ def rf(features, label):
     
     return y_pred, X_test, y_test, accuracy, (happy_precision, happy_recall), (calm_precision, calm_recall), (anger_precision, anger_recall), (sadness_precision, sadness_recall), dataset_size
 
-def SHAP(features, label):
+
+def SHAP(features, label, num_class):
     
     plt.rcParams['font.size'] = 20
     
-    X_train, X_test, y_train, y_test, dataset_size = splitbylabel(features, label, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test, dataset_size = splitbylabel(features, label, test_size=0.2, num_class=num_class, random_state=42)
     
     model = xgb.XGBClassifier()
     model.fit(X_train, y_train)
@@ -539,28 +654,37 @@ def SHAP(features, label):
     
     y_pred = model.predict(X_test)
     
-    happy_precision = round(cal_precision(y_pred, y_test, 0), 2)
-    calm_precision = round(cal_precision(y_pred, y_test, 1), 2)
-    anger_precision = round(cal_precision(y_pred, y_test, 2), 2)
-    sadness_precision = round(cal_precision(y_pred, y_test, 3), 2)
+    if num_class == 4:
+        happy_precision = round(cal_precision(y_pred, y_test, 0), 2)
+        calm_precision = round(cal_precision(y_pred, y_test, 1), 2)
+        anger_precision = round(cal_precision(y_pred, y_test, 2), 2)
+        sadness_precision = round(cal_precision(y_pred, y_test, 3), 2)
+        
+        happy_recall = round(cal_recall(y_pred, y_test, 0), 2)
+        calm_recall = round(cal_recall(y_pred, y_test, 1), 2)
+        anger_recall = round(cal_recall(y_pred, y_test, 2), 2)
+        sadness_recall = round(cal_recall(y_pred, y_test, 3), 2)
     
-    happy_recall = round(cal_recall(y_pred, y_test, 0), 2)
-    calm_recall = round(cal_recall(y_pred, y_test, 1), 2)
-    anger_recall = round(cal_recall(y_pred, y_test, 2), 2)
-    sadness_recall = round(cal_recall(y_pred, y_test, 3), 2)
+        return accuracy, (happy_precision, happy_recall), (calm_precision, calm_recall), (anger_precision, anger_recall), (sadness_precision, sadness_recall), y_pred, y_test, dataset_size, good10
+    elif num_class == 3:
+        pass
+    else:
+        positive_precision = round(cal_precision(y_pred, y_test, 0), 2)
+        negative_precision = round(cal_precision(y_pred, y_test, 1), 2)
+        
+        positive_recall = round(cal_recall(y_pred, y_test, 0), 2)
+        negative_recall = round(cal_recall(y_pred, y_test, 1), 2)
+        
+        return accuracy, (positive_precision, positive_recall), (negative_precision, negative_recall)
 
-    # print("shape: ", shap_values.shape)
 
-    # for i in range(shap_values.shape[-1]):
-    #     shap.plots.waterfall(shap_values[0, :, i], max_display=10, show=True)
-    #     plt.show()
-    
-    return accuracy, (happy_precision, happy_recall), (calm_precision, calm_recall), (anger_precision, anger_recall), (sadness_precision, sadness_recall), y_pred, y_test, dataset_size, good10
-
-
-def test(file_name, remote=True):
+def test(base_dir, file_name, num_class, remote=True):
     if remote:
-        ppg, label, sampling_rate = ppg_loader4deap(file_name)
+        print("not implemented")
+        sys.exit()
+        
+    else:
+        ppg, label, sampling_rate = ppg_loader4deap(base_dir, file_name)
         # print(f"\n\nppg.shape: {ppg.shape}, label.shape: {label.shape}\n\n")
         
         features = pd.DataFrame([0])
@@ -595,15 +719,12 @@ def test(file_name, remote=True):
         # print(f"\n\nfeatures.shape: {features.shape}, label.shape: {label.shape}\n\n")
         
         # print(f"label:\n{label}")
-    else:
-        # = deap_rppg_loader(verbose=False)
-        pass
         
-    xgboost_acc, happy_xg, calm_xg, anger_xg, sadness_xg, y_pred_xg, y_test_xg, test_size_xg, good10 = SHAP(features, label)
+    xgboost_acc, happy_xg, calm_xg, anger_xg, sadness_xg, y_pred_xg, y_test_xg, test_size_xg, good10 = SHAP(features, label, num_class=num_class)
     
     features = features.loc[:, good10]
     
-    y_pred, X_test, y_test, accuracy, happy, calm, anger, sadness, test_size = rf(features, label)
+    y_pred, X_test, y_test, accuracy, happy, calm, anger, sadness, test_size = rf(features, label, num_class=num_class)
     
     cm = confusion_matrix(y_test, y_pred)
     
@@ -706,8 +827,8 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
     criterion = []
     
     # Valence minimum value and maximum value
-    num_min = 1.5
-    num_max = 6.5
+    num_min = 2.0
+    num_max = 7.0
 
     # Dataset cutting criterion decision (0 ~ 8)
     if class_num == 2:
@@ -715,7 +836,7 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
         for i in range(int((num_max - num_min + 1)*2)):
             offset = 0
             while True:
-                criterion.append([1+i*0.5, 1+i*0.5+offset])
+                criterion.append([num_min+i*0.5, num_min+i*0.5+offset])
                 offset += 0.5
                 if 1+i*0.5+offset > num_max:
                     break
@@ -767,14 +888,41 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
     if class_num == 4 and not emotionless:
         print("Happy / Anger / Sadness / Calm classification start")
         criteria_list = [1.5 + 0.5*i for i in range(11)]
+
         for x in criteria_list:
             for y in criteria_list:
                 offset = 0
                 while True:
-                    if x-offset > num_min and x+offset < num_max and y-offset > num_min and y+offset < num_max:    
-                        criterion.append([[x-offset, y-offset], [x+offset,y+offset]])
-                    else:
+                    x_lb = x-offset
+                    y_lb = y-offset
+                    x_ru = x+offset
+                    y_ru = y+offset
+                    criterion.append([[x_lb, y_lb], [x_ru, y_ru]])
+                    offset += 0.5
+                    if x_lb < num_min or x_ru > num_max or y_lb < num_min or y_ru > num_max:
                         break
+                
+        if verbose:
+            for border in criterion:
+                fig, ax = plt.subplots(figsize=(15, 15))
+                rect1 = patches.Rectangle((0, 0), border[0][0], border[0][1], edgecolor='b', facecolor='b')  # sadness
+                rect2 = patches.Rectangle((0, border[1][1]), border[0][0], 8-border[1][1], edgecolor='m', facecolor='m')  # anger
+                rect3 = patches.Rectangle((border[1][0], border[1][1]), 8-border[1][0], 8-border[1][1], edgecolor='r', facecolor='r')  # happy
+                rect4 = patches.Rectangle((border[1][0], 0), 8-border[1][0], border[0][1], edgecolor='g', facecolor='g')  # calm
+                ax.text(border[0][0]//2, border[0][1]//2, 'sadness', color='black', fontsize=30, ha='center', va='center')
+                ax.text(border[0][0]//2, border[1][1]+(8-border[1][1])//2, 'anger', color='black', fontsize=30, ha='center', va='center')
+                ax.text(border[1][0]+(8-border[1][0])//2, border[1][1]+(8-border[1][1])//2, 'happy', color='black', fontsize=30, ha='center', va='center')
+                ax.text(border[1][0]+(8-border[1][0])//2, border[0][1]//2, 'calm', color='black', fontsize=30, ha='center', va='center')
+                ax.add_patch(rect1)
+                ax.add_patch(rect2)
+                ax.add_patch(rect3)
+                ax.add_patch(rect4)
+                ax.set_xlim(0, 10)
+                ax.set_ylim(0, 10)
+                ax.set_xlabel("Valence")
+                ax.set_ylabel("Arousal")
+                plt.legend()
+                plt.show()
     
     if class_num == 4 and emotionless:
         print("Happy / Anger / Sadness / Neutral classification start")
@@ -782,6 +930,7 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
         for x in criteria_list:
             for y in criteria_list:
                 pass
+
     print("criterion: ", len(criterion))
     
     total_acc = []
@@ -798,13 +947,20 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
         file_name = file_name + ".csv"
         
         if class_num == 2:
-            clear_emotion_binary(criterion_small, criterion_big, remote=remote)
+            clear_emotion_binary(border[0], border[1], remote=remote)
+            file_name = f"{int(border[0]*10)}_{int(border[1]*10)}.csv"
+            base_dir = "D:/home/BCML/IITP/data/DEAP/clear_emotion_binary/"
         if class_num == 3:
             clear_emotion_3classes(criterion_small, mid_1, mid_2, criterion_big, remote)
+            file_name = f"{int(border[0]*10)}_{int(border[1]*10)}_{int(border[2]*10)}_{int(border[3]*10)}.csv"
+            base_dir = "D:/home/BCML/IITP/data/DEAP/clear_emotion_3class/"
         if class_num == 4 and not emotionless:
-            clear_emotion(border[0], border[1], large, remote=False)
+            clear_emotion(border[0], border[1], remote=False)
+            file_name = f"{int(border[0]*10)}_{int(border[1]*10)}.csv"
+            base_dir = "D:/home/BCML/IITP/data/DEAP/clear_emotion/"
         
-        y_pred, y_test, accuracy = test(file_name, remote=remote)
+        y_pred, y_test, accuracy = test(base_dir, file_name, num_class=class_num, remote=remote)
+        
         total_acc.append(accuracy)
         total_pred.append(y_pred)
         total_test.append(y_test)
@@ -826,6 +982,9 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
 
 if __name__ == "__main__":
     
-    class_num = 4
+    class_num = 2
     remote = False
-    deap_classification(class_num=class_num, remote=remote)
+    verbose = False
+    deap_classification(class_num=class_num, remote=remote, verbose=verbose)
+    
+    
