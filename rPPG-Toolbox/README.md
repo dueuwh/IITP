@@ -1,7 +1,7 @@
 # :wave: Description
 
 This folder is copyed from original repository: https://github.com/ubicomplab/rPPG-Toolbox.git
-I added some dataset functions for IITP project to utilize pretrained/unsupervised rPPG models implemented in rPPG-Toolbox
+   I added some dataset functions for IITP project to utilize pretrained/unsupervised rPPG models implemented in rPPG-Toolbox
    
    
 ***
