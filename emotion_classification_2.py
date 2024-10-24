@@ -78,7 +78,6 @@ def deap_rppg_loader(verbose=True):
     output = {}
     output["data"] = total_rppg
     output["labels"] = total_label
-    print("outout[labels].shape: ", output["labels"].shape)
     return output
 
 def standardization():
@@ -126,8 +125,8 @@ def cube(ax, point1, point2, color):
 
 
 def ppg_loader4deap(base_dir, file_name):
-    ppg = pd.read_csv(os.getcwd() + "/data/DEAP/clear_emotion/ppg/" + file_name, index_col=0)
-    label = pd.read_csv(os.getcwd() + "/data/DEAP/clear_emotion/label/" + file_name, index_col=0)
+    ppg = pd.read_csv(base_dir + "ppg/" + file_name, index_col=0)
+    label = pd.read_csv(base_dir + "label/" + file_name, index_col=0)
     
     # The sampling rate of DEAP dataset is 128
     
@@ -203,12 +202,12 @@ def D3Scatter(class_num, border_points,
 
 
 def clear_emotion_binary(criterion_small, criterion_big, remote):
-    save_dir = "./data/DEAP/clear_emotion_binary/"
+    save_dir = "D:/home/BCML/IITP/data/DEAP/clear_emotion_binary/"
     rppg_folder = save_dir + "rppg/"
     ppg_folder = save_dir + "ppg/"
     label_folder = save_dir + "label/"
     
-    dataset_path = "./data/DEAP/data_preprocessed_python/"
+    dataset_path = "D:/home/BCML/IITP/data/DEAP/data_preprocessed_python/"
     subject_list = os.listdir(dataset_path)
 
     total_arousal = []
@@ -274,12 +273,11 @@ def clear_emotion_binary(criterion_small, criterion_big, remote):
 
 
 def clear_emotion_3classes(criterion_small, mid_1, mid_2, criterion_big, remote):
-    save_dir = "./data/DEAP/clear_emotion_3class/"
+    save_dir = "D:/home/BCML/IITP/data/DEAP/clear_emotion_3class/"
     rppg_folder = save_dir + "rppg/"
     ppg_folder = save_dir + "ppg/"
     label_folder = save_dir + "label/"
-    
-    dataset_path = "./data/DEAP/data_preprocessed_python/"
+    dataset_path = "D:/home/BCML/IITP/data/DEAP/data_preprocessed_python/"
     subject_list = os.listdir(dataset_path)
 
     total_arousal = []
@@ -292,12 +290,12 @@ def clear_emotion_3classes(criterion_small, mid_1, mid_2, criterion_big, remote)
     
 
 def clear_emotion(left_b_point, right_u_point, remote):
-    save_dir = "./data/DEAP/clear_emotion/"
+    save_dir = "D:/home/BCML/IITP/data/DEAP/clear_emotion/"
     rppg_folder = save_dir + "rppg/"
     ppg_folder = save_dir + "ppg/"
     label_folder = save_dir + "label/"
     
-    dataset_path = "./data/DEAP/data_preprocessed_python/"
+    dataset_path = "D:/home/BCML/IITP/data/DEAP/data_preprocessed_python/"
     subject_list = os.listdir(dataset_path)
     
     total_arousal = []
@@ -684,7 +682,7 @@ def SHAP(features, label, num_class):
         sorted_parameters_by_avg_rank = [X_test.columns[i] for i in sorted_indices_by_avg_rank]
     else:
         shap.plots.beeswarm(shap_values, max_display=12)
-        sorted_indices = np.argsort(np.mean(np.abs(shap_values.values), axis=0))
+        sorted_indices = np.argsort(np.mean(np.abs(shap_values.values), axis=0)))
         sorted_parameters_by_avg_rank = [X_test.columns[i]]
         
     good10 = sorted_parameters_by_avg_rank[0:10]
@@ -1014,7 +1012,7 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
                 pass
 
     print("criterion: ", len(criterion))
-    0
+    
     total_acc = []
     total_pred = []
     total_test = []
@@ -1064,9 +1062,10 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
 
 if __name__ == "__main__":
     
-    class_num = 4
+
+    class_num = 2
     remote = False
-    verbose = True
+    verbose = False
     deap_classification(class_num=class_num, remote=remote, verbose=verbose)
     
     
