@@ -149,7 +149,10 @@ class IITPLoader(BaseLoader):
             
         frames_clips, bvps_clips = self.preprocess(frames, bvps, config_preprocess)
         input_name_list, label_name_list = self.save_multi_process(frames_clips, bvps_clips, saved_filename)
+        # input_name_list, label_name_list = self.save(frames_clips, bvps_clips, saved_filename)
         file_list_dict[i] = input_name_list
+        
+        del frames, bvps, frames_clips, bvps_clips, input_name_list, label_name_list
 
     @staticmethod
     def read_video(frame_dir):
@@ -163,7 +166,7 @@ class IITPLoader(BaseLoader):
             else:
                 frame = frame[:, 140:-140, :]
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_CUBIC)
+            frame = cv2.resize(frame, (0, 0), fx=0.9, fy=0.9, interpolation=cv2.INTER_CUBIC)
             frames.append(frame)
         return np.asarray(frames)
 
