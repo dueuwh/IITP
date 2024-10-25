@@ -261,7 +261,7 @@ class BaseLoader(Dataset):
         else:
             frames_clips = np.array([data])
             bvps_clips = np.array([bvps])
-        
+
         return frames_clips, bvps_clips
 
     def face_detection(self, frame, backend, use_larger_box=False, larger_box_coef=1.0):

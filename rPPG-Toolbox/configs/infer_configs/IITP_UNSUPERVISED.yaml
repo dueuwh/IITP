@@ -4,11 +4,11 @@ UNSUPERVISED:
   METHOD: ["ICA", "POS", "CHROM", "GREEN", "LGI", "PBV", "OMIT"]
   METRICS: ['MAE', 'RMSE', 'MAPE', 'Pearson', 'SNR', 'BA', 'MACC']
   DATA:
-    FS: 30
+    FS: 15
     DATASET: IITP
     DO_PREPROCESS: True               # if first time, should be true
     DATA_FORMAT: NDHWC
-    DATA_PATH: "C:/Users/U/Desktop/BCML/IITP/IITP_emotions/data/senior/sychro"                     # Raw dataset path, need to be updated
+    DATA_PATH: "C:/Users/U/Desktop/BCML/IITP/IITP_emotions/data/senior/sychro"                           # Raw dataset path, need to be updated
     CACHED_PATH: "C:/Users/U/Desktop/BCML/IITP/IITP_emotions/data/senior/sychro/results/rppg_toolbox"    # Processed dataset save path, need to be updated
     EXP_DATA_NAME: ""
     BEGIN: 0.0
@@ -17,8 +17,8 @@ UNSUPERVISED:
       DATA_TYPE: ['Raw']
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Raw
-      DO_CHUNK: False
-      CHUNK_LENGTH: 180
+      DO_CHUNK: TRUE
+      CHUNK_LENGTH: 450     # Number of frames, currently set to 15*600 = 9000
       CROP_FACE:
         DO_CROP_FACE: True
         BACKEND: 'HC'    # HC for Haar Cascade, RF for RetinaFace
@@ -26,7 +26,7 @@ UNSUPERVISED:
         LARGE_BOX_COEF: 1.5
         DETECTION:
           DO_DYNAMIC_DETECTION: False
-          DYNAMIC_DETECTION_FREQUENCY : 30
+          DYNAMIC_DETECTION_FREQUENCY : 15
           USE_MEDIAN_FACE_BOX: False    # This should be used ONLY if dynamic detection is used
       RESIZE:
         H: 72

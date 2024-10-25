@@ -155,7 +155,7 @@ class IITPLoader(BaseLoader):
     def read_video(frame_dir):
         """Reads a video file, returns frames(T, H, W, 3) """
         frames = list()
-        img_list = os.listdir(frame_dir)
+        img_list = sorted(os.listdir(frame_dir))
         for img in img_list:
             frame = cv2.imread(frame_dir+'/'+img)
             if frame.shape[0] == 720:
@@ -163,7 +163,7 @@ class IITPLoader(BaseLoader):
             else:
                 frame = frame[:, 140:-140, :]
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = np.asarray(frame)
+            # frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_CUBIC)
             frames.append(frame)
         return np.asarray(frames)
 
