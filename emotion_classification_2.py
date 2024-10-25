@@ -280,7 +280,6 @@ def clear_emotion_3classes(criterion_small, mid_1, mid_2, criterion_big, remote)
     rppg_folder = save_dir + "rppg/"
     ppg_folder = save_dir + "ppg/"
     label_folder = save_dir + "label/"
-    
     dataset_path = "D:/home/BCML/IITP/data/DEAP/data_preprocessed_python/"
     subject_list = os.listdir(dataset_path)
 
@@ -1130,8 +1129,7 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
 # happy > neutral > anxiety > embarrassment > heartache > sadness > anger
 
 if __name__ == "__main__":
-    
-    class_num = 4
+    class_num = 2
     remote = False
     verbose = False
     parameter_num = 10
