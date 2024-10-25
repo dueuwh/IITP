@@ -8,12 +8,13 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import pandas as pd
 import neurokit2 as nk
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier, OutputCodeClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 from sklearn.preprocessing import StandardScaler
 import shap
 import xgboost as xgb
-from sklearn.metrics import confusion_matrix
 import seaborn as sns
 import itertools
 import sys
@@ -80,7 +81,22 @@ def deap_rppg_loader(verbose=True):
     output["labels"] = total_label
     return output
 
+def ppg_loader4deap(base_dir, file_name):
+    ppg = pd.read_csv(base_dir + "ppg/" + file_name, index_col=0)
+    label = pd.read_csv(base_dir + "label/" + file_name, index_col=0)
+    
+    # The sampling rate of DEAP dataset is 128
+    
+    return ppg, label, 128.0
+
+
+def rppg_loader4deap(file_name):
+    pass
+
 def standardization():
+    pass
+
+def robustscalar():
     pass
 
 def minmaxscalar(inputseries):
@@ -122,19 +138,6 @@ def cube(ax, point1, point2, color):
                     np.array([[point2[1], point2[1]], [point2[1], point2[1]]]),
                     np.array([[point2[2], point1[2]], [point2[2], point1[2]]]),
                     alpha=0.2, color=color)
-
-
-def ppg_loader4deap(base_dir, file_name):
-    ppg = pd.read_csv(base_dir + "ppg/" + file_name, index_col=0)
-    label = pd.read_csv(base_dir + "label/" + file_name, index_col=0)
-    
-    # The sampling rate of DEAP dataset is 128
-    
-    return ppg, label, 128.0
-
-
-def rppg_loader4deap(file_name):
-    pass
  
 
 def D3Scatter(class_num, border_points,
@@ -625,31 +628,104 @@ def classnum2performance(y_pred, y_test):
     return (positive_precision, positive_recall), (negative_precision, negative_recall)
 
 
+class classification_1by1:
+    def __init__(self, features, label):
+        self.features = features
+        self.label = label
+        self.random_state = 42
+        self.num_class = 0
+        if isinstance(self.features, dict):
+            self.iter = features.keys()[-1]
+            if self.features.keys()[-1] == 4:
+                self.class4()
+                self.num_class = 4
+            else:
+                self.class3()
+                self.num_class = 3
+        else:
+            self.class2()
+            self.num_class = 2
+        
+    def class4(self):
+        self.X_train_happy, self.X_test_happy, self.y_train_happy, self.y_test_happy, self.dataset_size_happy = splitbylabel(self.features[0], self.label, 0.2, 4, 42)
+        self.X_train_calm, self.X_test_calm, self.y_train_calm, self.y_test_calm, self.dataset_size_calm = splitbylabel(self.features[1], self.label, 0.2, 4, 42)
+        self.X_train_anger, self.X_test_anger, self.y_train_anger, self.y_test_anger, self.dataset_size_anger = splitbylabel(self.features[2], self.label, 0.2, 4, 42)
+        self.X_train_sadness, self.X_test_sadness, self.y_train_sadness, self.y_test_sadness, self.dataset_size_sadness = splitbylabel(self.features[3], self.label, 0.2, 4, 42)
+        self.X_train_mean, self.X_test_mean, self.y_train_mean, self.y_test_mean, self.dataset_size_mean = splitbylabel(self.features[4], self.label, 0.2, 4, 42)
+        
+    def class3(self):
+        self.X_train_positive, self.X_test_positive, self.y_train_positive, self.y_test_positive, self.dataset_size_positive = splitbylabel(self.features[0], self.label, 0.2, 3, 42)
+        self.X_train_neutral, self.X_test_neutral, self.y_train_neutral, self.y_test_neutral, self.dataset_size_neutral = splitbylabel(self.features[1], self.label, 0.2, 3, 42)
+        self.X_train_negative, self.X_test_negative, self.y_train_negative, self.y_test_negative, self.dataset_size_negative = splitbylabel(self.features[2], self.label, 0.2, 3, 42)
 
-def rf(features, label, num_class):
-    X_train, X_test, y_train, y_test, dataset_size = splitbylabel(features, label, test_size=0.2, num_class=num_class, random_state=42)
-    
-    rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+    def class2(self):
+        self.X_train, self.X_test, self.y_train, self.y_test, self.dataset_size = splitbylabel(self.features, self.label, 0.2, 3, 42)
 
-    rf_classifier.fit(X_train, y_train)
-    y_pred = rf_classifier.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
+    def xgboost(self):
+        if self.num_class == 4:
+            xgb_happy = xgb(n_estimators=100, random_state=self.random_state)
+            xgb_calm = xgb(n_estimators=100, random_state=self.random_state)
+            xgb_anger = xgb(n_estimators=100, random_state=self.random_state)
+            xgb_sadness = xgb(n_estimators=100, random_state=self.random_state)
+            xgb_mean = xgb(n_estimators=100, random_state=self.random_state)
+            
+            xgb_happy.fit(self.X_train_happy, self.y_train_happy)
+            xgb_calm.fit(self.X_train_calm, self.y_train_calm)
+            xgb_happy.fit(self.X_train_happy, self.y_train_happy)
+            xgb_happy.fit(self.X_train_happy, self.y_train_happy)
+
+    def random_forst(self):
+        
+
+    def svm(self):
+        
+
+    def onevsrest(self):
+        return 0
     
-    if num_class == 4:
-        happy, calm, anger, sadness = classnum4performance(y_pred, y_test)
-        return y_pred, y_test, accuracy, happy, calm, anger, sadness, dataset_size
+    def oneveone(self):
+        return 0
     
-    elif num_class == 3:
-        positive, neutral, negative = classnum3performance(y_pred, y_test)
-        return y_pred, y_test, accuracy, positive, neutral, negative, dataset_size
-    
+    def outputcode(self):
+        return 0
+
+
+def SHAP_ranking(feature_list, shap_value):
+    output = []
+    if len(shap_value.shape) >= 3:
+        temp = []
+        for i in range(shap_value.shape[-1]):
+            sorted_index = np.argsort(np.mean(np.abs(shap_value[:, :, i]), axis=0)).tolist()
+            temp.append(sorted_index)
+            output.append([feature_list[sorted_index.index(i)] for i in range(len(sorted_index))])
+        
+        temp = np.array(temp).T
+        temp = np.argsort(np.mean(temp, axis=1)).tolist()
+        output.append([feature_list[temp.index(i)] for i in range(len(temp))])
+        output = np.array(output)
     else:
-        positive, negative = classnum2performance(y_pred, y_test)
-        return y_pred, y_test, accuracy, positive, negative, dataset_size
+        sorted_index = np.argsort(np.mean(np.abs(shap_value[:, :, i]), axis=0)).tolist()
+        output = np.array([feature_list[sorted_index.index(i)] for i in range(len(sorted_index))])
+            
+    return output
 
-def SHAP(features, label, num_class):
+
+def SHAP(features, label, num_class, parameter_num):
     
-    plt.rcParams['font.size'] = 20
+    """
+    input:
+        features: HRV features for classification
+        label: Clear label (relabled : point -> class)
+        num_class: The number of classes
+        parameter_num: Paramter number for performance test
+                       These
+    
+    output:
+        shap_values: shap values for parameter ranking
+                     Due to this output, good10 will be deprecated.
+    """
+    
+    plt.rcParams['font.size'] = 15
     
     X_train, X_test, y_train, y_test, dataset_size = splitbylabel(features, label, test_size=0.2, num_class=num_class, random_state=42)
     
@@ -665,51 +741,20 @@ def SHAP(features, label, num_class):
 
     rankings = np.zeros((shap_values.values.shape[1], shap_values.values.shape[-1]))
     
-    # print(f"\n\n\nshap_values shape: {shap_values.shape}\n\n\n")
-    # print(f"\n\n\nshap_values.values shape: {shap_values.values.shape}\n\n\n")
+    # good10 (any) -> index of parameters good for classification (parameter_num)
     
-    if len(shap_values.values.shape)>=3:
+    if len(shap_values.values.shape)>=3:  # 4, 3 classes
         for i in range(shap_values.values.shape[-1]):
-            shap.plots.beeswarm(shap_values[:, :, i], max_display=12)
-        
-        for i in range(shap_values.values.shape[-1]):
-            mean_abs_shap_values = np.mean(np.abs(shap_values.values[:, :, i]), axis=0)
-    
-            sorted_indices = np.argsort(mean_abs_shap_values)[::-1]
-            for rank, index in enumerate(sorted_indices):
-                rankings[index, class_index] = rank
-        average_rankings = np.mean(rankings, axis=1)
-        sorted_indices_by_avg_rank = np.argsort(average_rankings)
-        sorted_parameters_by_avg_rank = [X_test.columns[i] for i in sorted_indices_by_avg_rank]
-    else:
-        shap.plots.beeswarm(shap_values, max_display=12)
-        sorted_indices = np.argsort(np.mean(np.abs(shap_values.values), axis=0)))
-        sorted_parameters_by_avg_rank = [X_test.columns[i]]
-        
-    good10 = sorted_parameters_by_avg_rank[0:10]
+            shap.plots.beeswarm(shap_values[:, :, i], max_display=parameter_num+2)
+                
+    else:  # 2 classes (positive vs negative)
+        shap.plots.beeswarm(shap_values, max_display=parameter_num+2)
 
-    X_train = X_train.loc[:, good10]
-    X_test = X_test.loc[:, good10]
-
-    model = xgb.XGBClassifier()
-    model.fit(X_train, y_train)
     
-    y_pred = model.predict(X_test)
-    
-    if num_class == 4:
-        happy, calm, anger, sadness = classnum4performance(y_pred, y_test)
-        return y_test, y_pred, happy, calm, anger, sadness, dataset_size, good10
-    
-    elif num_class == 3:
-        positive, neutral, negative = classnum3performance(y_pred, y_test)
-        return y_test, y_pred, positive, neutral, negative, dataset_size, good10
-    
-    else:
-        positive, negative = classnum2performance(y_pred, y_test)
-        return y_test, y_pred, positive, negative, dataset_size, good10
+    return shap_values.values
 
 
-def test(base_dir, file_name, num_class, remote=True):
+def test(base_dir, file_name, num_class, parameter_num, remote=True):
     if remote:
         print("not implemented")
         sys.exit()
@@ -736,38 +781,59 @@ def test(base_dir, file_name, num_class, remote=True):
             else:
                 temp = pd.DataFrame(result)
                 features = pd.concat([features, temp], axis=0, join='outer')
-        # print(f"\n\nfeatures.shape: {features.shape}, label.shape: {label.shape}\n\n")
-        # print(f"\n\nfeatures\n{features}\n\n")
+        
         features.replace([np.inf, -np.inf], np.nan, inplace=True)
         features = features.reset_index(drop=True)
         label = label.reset_index(drop=True)
         nan_rows = features[features.isna().any(axis=1)].index
-        # print(f"\n\nnan_rows:\n{nan_rows}\n\n")
+        
         features = features.dropna(axis=0)
         features = features.reset_index(drop=True)
         label = label.drop(nan_rows)
         label = label.reset_index(drop=True)
-        # print(f"\n\nfeatures.shape: {features.shape}, label.shape: {label.shape}\n\n")
-        
-        # print(f"label:\n{label}")
     
     performance_y_label = ["Precision", "Recall"]
     
+    feature_list = features.columns
+    
     if class_num == 4:
-        y_test_xg, y_pred_xg, happy_xg, calm_xg, anger_xg, sadness_xg, test_size_xg, good10 = SHAP(features, label, num_class=num_class)
-        features = features.loc[:, good10]
-        y_pred, y_test, accuracy, happy, calm, anger, sadness, test_size = rf(features, label, num_class=num_class)
+        shap_values = SHAP(features, label, num_class, parameter_num=parameter_num)
         
-        cm = confusion_matrix(y_test, y_pred)
-        cm_xg = confusion_matrix(y_test_xg, y_pred_xg)
+        sel_parameters = SHAP_ranking(feature_list, shap_values)
+        
+        happy_input = features.loc[:, sel_parameters[0, :parameter_num]]
+        calm_input = features.loc[:, sel_parameters[1, :parameter_num]]
+        anger_input = features.loc[:, sel_parameters[2, :parameter_num]]
+        sadness_input = features.loc[:, sel_parameters[3, :parameter_num]]
+        mean_input = features.loc[:, sel_parameters[4, :parameter_num]]
+        
+        onebyone_input = {}
+        onebyone_input[0] = happy_input
+        onebyone_input[1] = calm_input
+        onebyone_input[2] = anger_input
+        onebyone_input[3] = sadness_input
+        onebyone_input[4] = mean_input
+        
+        class4_1by1 = classification_1by1(onebyone_input, label)
+        
+        y_pred_or, y_test_or, accuracy_or, happy_or, calm_or, anger_or, sadness_or, test_size_or = class4_1by1.onevsrest()
+        y_pred_oo, y_test_oo, accuracy_oo, happy_oo, calm_oo, anger_oo, sadness_oo, test_size_oo = calss4_1by1.onevsone()
+        y_pred_oc, y_test_oc, accuracy_oc, happy_oc, calm_oc, anger_oc, sadness_oc, test_size_oc = class4_1by1.outputcode()
+        
+        cm_or = confusion_matrix(y_test_or, y_pred_or)
+        cm_oo = confusion_matrix(y_test_oo, y_pred_oo)
+        cm_oc = confusion_matrix(y_test_oc, y_pred_oc)
         
         emotions = ["happy", "calm", "anger", "sadness"]
         
         xg_total = [happy_xg, calm_xg, anger_xg, sadness_xg]
+        svm_total = [happy_sv, calm_sv, anger_sv, sadness_sv]
         rf_total = [happy, calm, anger, sadness]
         
         xg_title = (f"Parameters\n{good10[0:5]}\n{good10[5:]}\n\nXGBoost result"
                     f"\ntest size Happy: {test_size_xg[0]} Calm: {test_size_xg[1]} Anger: {test_size_xg[2]} Sadness: {test_size_xg[3]}")
+        
+        sv_title = (f"Paramters")
         
         rf_title = (f"Random Forest result"
                     f"\ntest size Happy: {test_size[0]} Calm: {test_size[1]} Anger: {test_size[2]} Sadness: {test_size[3]}")
@@ -775,7 +841,7 @@ def test(base_dir, file_name, num_class, remote=True):
         performance_array = np.array([[happy, calm, anger, sadness], [happy_xg, calm_xg, anger_xg, sadness_xg]])
         
     elif class_num == 3:
-        y_test_xg, y_pred_xg, positive_xg, neutral_xg, negative_xg, test_size_xg, good10 = SHAP(features, label, num_class=num_class)
+        shap_values = SHAP(features, label, num_class=num_class, parameter_num=parameter_num)
         features = features.loc[:, good10]
         y_pred, y_test, accuracy, positive, neutral, negative, test_size = rf(features, label, num_class=num_class)
     
@@ -796,7 +862,7 @@ def test(base_dir, file_name, num_class, remote=True):
         performance_array = np.array([[positive, neutral, negative], [positive_xg, neutral_xg, negative_xg]])
     
     else:
-        y_test_xg, y_pred_xg, positive_xg, negative_xg, test_size_xg, good10 = SHAP(features, label, num_class=num_class)
+        shap_values = SHAP(features, label, num_class=num_class, parameter_num=parameter_num)
         features = features.loc[:, good10]
         y_pred, y_test, accuracy, positive, negative, test_size = rf(features, label, num_class=num_class)
     
@@ -862,7 +928,8 @@ def test(base_dir, file_name, num_class, remote=True):
     return y_pred, y_test, accuracy
     
 
-def deap_classification(class_num, remote=False, emotionless=False, verbose=False):
+def deap_classification(class_num, remote=False, emotionless=False, verbose=False,
+                        parameter_num=10):
     
     """
     criterion: Dataset class border list
@@ -978,10 +1045,10 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
                     y_lb = y-offset
                     x_ru = x+offset
                     y_ru = y+offset
+                    if x_lb < num_min+0.5 or x_ru > num_max+0.5 or y_lb < num_min+0.5 or y_ru > num_max+0.5:
+                        break
                     criterion.append([[x_lb, y_lb], [x_ru, y_ru]])
                     offset += 0.5
-                    if x_lb < num_min or x_ru > num_max or y_lb < num_min or y_ru > num_max:
-                        break
                 
         if verbose:
             for border in criterion:
@@ -1040,7 +1107,8 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
             file_name = f"{int(border[0][0]*10)}_{int(border[0][1]*10)}_{int(border[1][0]*10)}_{int(border[1][1]*10)}.csv"
             base_dir = "D:/home/BCML/IITP/data/DEAP/clear_emotion/"
         
-        y_pred, y_test, accuracy = test(base_dir, file_name, num_class=class_num, remote=remote)
+        y_pred, y_test, accuracy = test(base_dir, file_name, num_class=class_num,
+                                        parameter_num=parameter_num, remote=remote)
         
         total_acc.append(accuracy)
         total_pred.append(y_pred)
@@ -1063,9 +1131,10 @@ def deap_classification(class_num, remote=False, emotionless=False, verbose=Fals
 
 if __name__ == "__main__":
     
-    class_num = 2
+    class_num = 4
     remote = False
     verbose = False
-    deap_classification(class_num=class_num, remote=remote, verbose=verbose)
+    parameter_num = 10
+    deap_classification(class_num=class_num, remote=remote, verbose=verbose, parameter_num=parameter_num)
     
     
