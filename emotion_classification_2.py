@@ -682,7 +682,7 @@ def SHAP(features, label, num_class):
         sorted_parameters_by_avg_rank = [X_test.columns[i] for i in sorted_indices_by_avg_rank]
     else:
         shap.plots.beeswarm(shap_values, max_display=12)
-        sorted_indices = np.argsort(np.mean(np.abs(shap_values.values), axis=0)))
+        sorted_indices = np.argsort(np.mean(np.abs(shap_values.values), axis=0))
         sorted_parameters_by_avg_rank = [X_test.columns[i]]
         
     good10 = sorted_parameters_by_avg_rank[0:10]
