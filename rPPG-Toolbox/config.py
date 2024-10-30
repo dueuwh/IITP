@@ -261,7 +261,7 @@ _C.UNSUPERVISED.DATA.END = 1.0
 _C.UNSUPERVISED.DATA.FOLD = CN()
 _C.UNSUPERVISED.DATA.FOLD.FOLD_NAME = ''
 _C.UNSUPERVISED.DATA.FOLD.FOLD_PATH = ''
-_C.UNSUPERVISED.DATA.EMOTIONS = ['anger', 'anxiety', 'embarrassment', 'happy', 'hurt', 'neutral', 'sadness']
+_C.UNSUPERVISED.DATA.EMOTIONS = ['anger', 'anxiety', 'embarrassment', 'happy', 'hurt', 'neutral', 'sadness']    
 # Unsupervised Data preprocessing
 _C.UNSUPERVISED.DATA.PREPROCESS = CN()
 _C.UNSUPERVISED.DATA.PREPROCESS.USE_PSUEDO_PPG_LABEL = False
@@ -346,7 +346,8 @@ _C.INFERENCE.EVALUATION_WINDOW = CN()
 _C.INFERENCE.EVALUATION_WINDOW.USE_SMALLER_WINDOW = False
 _C.INFERENCE.EVALUATION_WINDOW.WINDOW_SIZE = 10
 _C.INFERENCE.MODEL_PATH = ''
-
+_C.INFERENCE.SAVE_BVP = True
+_C.INFERENCE.SAVE_PATH = "C:/Users/U/Desktop/BCML/IITP/IITP_emotions/data/senior/sychro/results/rppg_toolbox/total/bvp"
 # -----------------------------------------------------------------------------
 # Device settings
 # -----------------------------------------------------------------------------
