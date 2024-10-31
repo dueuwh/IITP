@@ -10,6 +10,7 @@ from unsupervised_methods.methods.POS_WANG import *
 from unsupervised_methods.methods.OMIT import *
 from tqdm import tqdm
 from evaluation.BlandAltmanPy import BlandAltman
+import os
 
 def unsupervised_predict(config, data_loader, method_name):
     """ Model evaluation on the testing dataset."""
@@ -23,7 +24,7 @@ def unsupervised_predict(config, data_loader, method_name):
     SNR_all = []
     MACC_all = []
     sbar = tqdm(data_loader["unsupervised"], ncols=80)
-    for _, test_batch in enumerate(sbar):
+    for i_batch, test_batch in enumerate(sbar):
         batch_size = test_batch[0].shape[0]
         for idx in range(batch_size):
             data_input, labels_input = test_batch[0][idx].cpu().numpy(), test_batch[1][idx].cpu().numpy()
@@ -43,7 +44,13 @@ def unsupervised_predict(config, data_loader, method_name):
             elif method_name == "OMIT":
                 BVP = OMIT(data_input)
             else:
-                raise ValueError("unsupervised method name wrong!")
+                raise ValueError("wrong unsupervised method name!")
+            
+            if not os.path.exists(f"{config.INFERENCE.SAVE_PATH}/{method_name}"):
+                os.mkdir(f"{config.INFERENCE.SAVE_PATH}/{method_name}")
+
+            if config.INFERENCE.SAVE_BVP:
+                np.save(f"{config.INFERENCE.SAVE_PATH}/{method_name}/bvp_{i_batch}.npy", BVP)
 
             video_frame_size = test_batch[0].shape[1]
             if config.INFERENCE.EVALUATION_WINDOW.USE_SMALLER_WINDOW:
@@ -51,8 +58,13 @@ def unsupervised_predict(config, data_loader, method_name):
                 if window_frame_size > video_frame_size:
                     window_frame_size = video_frame_size
             else:
-                window_frame_size = video_frame_size
-
+                window_frame_size = video_frame_size        
+                
+            gt_hr = []
+            pre_hr = []
+            SNR = []
+            macc = []
+                
             for i in range(0, len(BVP), window_frame_size):
                 BVP_window = BVP[i:i+window_frame_size]
                 label_window = labels_input[i:i+window_frame_size]
@@ -77,6 +89,12 @@ def unsupervised_predict(config, data_loader, method_name):
                     MACC_all.append(macc)
                 else:
                     raise ValueError("Inference evaluation method name wrong!")
+            
+            np.save(f"{config.INFERENCE.SAVE_PATH}/{method_name}/gt_hr_{i_batch}.npy", gt_hr)
+            np.save(f"{config.INFERENCE.SAVE_PATH}/{method_name}/pre_hr_{i_batch}.npy", pre_hr)
+            np.save(f"{config.INFERENCE.SAVE_PATH}/{method_name}/SNR_{i_batch}.npy", SNR)
+            np.save(f"{config.INFERENCE.SAVE_PATH}/{method_name}/macc_{i_batch}.npy", macc)
+            
     print("Used Unsupervised Method: " + method_name)
 
     # Filename ID to be used in any results files (e.g., Bland-Altman plots) that get saved

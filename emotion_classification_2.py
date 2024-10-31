@@ -744,10 +744,23 @@ def SHAP(features, label, num_class, parameter_num):
     
     if len(shap_values.values.shape)>=3:  # 4, 3 classes
         for i in range(shap_values.values.shape[-1]):
-            shap.plots.beeswarm(shap_values[:, :, i], max_display=parameter_num+2)
-                
-    else:  # 2 classes (positive vs negative)
-        shap.plots.beeswarm(shap_values, max_display=parameter_num+2)
+            shap.plots.beeswarm(shap_values[:, :, i], max_display=12)
+        
+        for i in range(shap_values.values.shape[-1]):
+            mean_abs_shap_values = np.mean(np.abs(shap_values.values[:, :, i]), axis=0)
+    
+            sorted_indices = np.argsort(mean_abs_shap_values)[::-1]
+            for rank, index in enumerate(sorted_indices):
+                rankings[index, class_index] = rank
+        average_rankings = np.mean(rankings, axis=1)
+        sorted_indices_by_avg_rank = np.argsort(average_rankings)
+        sorted_parameters_by_avg_rank = [X_test.columns[i] for i in sorted_indices_by_avg_rank]
+    else:
+        shap.plots.beeswarm(shap_values, max_display=12)
+        sorted_indices = np.argsort(np.mean(np.abs(shap_values.values), axis=0))
+        sorted_parameters_by_avg_rank = [X_test.columns[i]]
+        
+    good10 = sorted_parameters_by_avg_rank[0:10]
 
     
     return shap_values.values
