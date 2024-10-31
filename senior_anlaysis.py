@@ -56,6 +56,7 @@ if __name__ == "__main__":
     #_____________________________________________________________
     
     emotions_idx = [1, 4, 6, 7]
+    emotions_names = {1:'anger', 4:'happy', 6:'neutral', 7:'sadness'}
     
     bvp_algorithms = os.listdir(bvp_path)
     common_list = os.listdir(f"{bvp_path}{bvp_algorithms[0]}")
@@ -77,15 +78,20 @@ if __name__ == "__main__":
             emotion = int(label.split('_')[0][-1])
             if emotion in emotions_idx:
                 if subject not in label_dic.keys():
-                    label_dic[subject] = [label]
-                    rppg_dic[subject] = [bvp_common_list[idx]]
-                    prehr_dic[subject] = [prehr_common_list[idx]]
-                    gthr_dic[subject] = [gthr_common_list[idx]]
+                    label_dic[subject] = {}
+                    rppg_dic[subject] = {}
+                    prehr_dic[subject] = {}
+                    gthr_dic[subject] = {}
+
+                    label_dic[subject][emotions_names[emotion]] = [label]
+                    rppg_dic[subject][emotions_names[emotion]] = [bvp_common_list[idx]]
+                    prehr_dic[subject][emotions_names[emotion]] = [prehr_common_list[idx]]
+                    gthr_dic[subject][emotions_names[emotion]] = [gthr_common_list[idx]]
                 else:
-                    label_dic[subject].append(label)
-                    rppg_dic[subject].append(bvp_common_list[idx])
-                    prehr_dic[subject].append(prehr_common_list[idx])
-                    gthr_dic[subject].append(gthr_common_list[idx])
+                    label_dic[subject][emotions_names[emotion]].append(label)
+                    rppg_dic[subject][emotions_names[emotion]].append(bvp_common_list[idx])
+                    prehr_dic[subject][emotions_names[emotion]].append(prehr_common_list[idx])
+                    gthr_dic[subject][emotions_names[emotion]].append(gthr_common_list[idx])
                 
         return label_dic, rppg_dic, prehr_dic, gthr_dic
     
@@ -93,8 +99,17 @@ if __name__ == "__main__":
     
     def hr_plot():
         for subject in label_dic.keys():
-            for algorithm in bvp_algorithms:
-                
+            label_data = []
+            for i, file_name in enumerate(label_dic[subject]):
+                if i == 0:
+                    label_data = np.load(f"{label_path}{label_dic[subject][i]}")
+                else:
+                    label_data = np.concatenate((label_data, np.load(f"{label_path}{label_dic[subject][i]}")))
+            plt.plot(label_data)
+            plt.title(f"{subject}")
+            plt.show()
+    
+    hr_plot()
                 
                 
                 
