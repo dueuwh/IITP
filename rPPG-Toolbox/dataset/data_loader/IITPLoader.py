@@ -109,6 +109,7 @@ class IITPLoader(BaseLoader):
                     index = int(subject_trail_val)
                     subject = int(i+1)
                     dirs.append({"index":index, "path":append_path, "subject": subject})
+        print("dirs:\n", dirs)
         return dirs
 
     def split_raw_data(self, data_dirs, begin, end):
