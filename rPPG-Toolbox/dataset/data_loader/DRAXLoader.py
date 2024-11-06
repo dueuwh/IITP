@@ -46,7 +46,7 @@ class DRAXLoader(BaseLoader):
         Args:
             data_path(str): C:/Users/U/Desktop/BCML/Drax/PAPER/data
         """
-        file_list = os.listdir(data_path + os.sep + "videos/")
+        file_list = os.listdir(data_path + os.sep + "frames/")
         
         subject_names = [name.split('_')[0] for name in file_list]
         subject_names = list(set(subject_names))
@@ -60,7 +60,7 @@ class DRAXLoader(BaseLoader):
             
         dirs = list()
         for file_name in file_list:
-            append_path = data_path + os.sep + f"videos/{file_name}"
+            append_path = data_path + os.sep + f"frames/{file_name}"
             subject_name = file_name.split('_')[0]
             subject_file_num = file_name.split('_')[1]
             subject_trail_val = str(subject_num[subject_name]+1)+subject_file_num
@@ -116,23 +116,28 @@ class DRAXLoader(BaseLoader):
     def read_video(frame_dir):
         """Reads a video file, returns frames(T, H, W, 3) """
         frames = list()
-        cap = cv2.VideoCapture(frame_dir)
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img_list = sorted(os.listdir(frame_dir))
+        for img in img_list:
+            frame = cv2.imread(f"{frame_dir}/{img}")
+            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             # frame = cv2.resize(frame, (0, 0), fx=0.9, fy=0.9, interpolation=cv2.INTER_CUBIC)
             frames.append(frame)
         return np.asarray(frames)
 
     @staticmethod
     def read_wave(frame_dir):
-        """Reads a bvp signal file."""
-        label_dir = frame_dir.split("\\")[0] + "/labels/"
-        file_name_elements = frame_dir.split('/')[-1].split('_')
-        ecg_file_path = f"{label_dir}{file_name_elements[0]}_{file_name_elements[1]}.csv"
-        ecg_file = pd.read_csv(ppg_file_path, index_col=0)["ECG"].dropna().to_numpy()
+        """Reads a ecg signal file."""
+        ecg_dir = frame_dir.replace('frames', 'labels_synchro')
+        path_elements = ecg_dir.split('/')
+        good_path = ' '
+        for i, element in enumerate(path_elements[:-1]):
+            if i == 0:
+                good_path = element + '/'
+            else:
+                good_path += element + '/'
+        good_path = good_path + path_elements[-1][:5]+".npy"
+        good_path = good_path.replace('\\', '/')
+        ecg_file = np.load(good_path)
         return ecg_file
 
     

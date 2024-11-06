@@ -18,7 +18,7 @@ UNSUPERVISED:
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Raw
       DO_CHUNK: TRUE
-      CHUNK_LENGTH: 1800     # Number of frames, currently set to 30*60 = 1800 (1min)
+      CHUNK_LENGTH: 900     # Number of frames, currently set to 30*30 = 900 (30sec)
       CROP_FACE:
         DO_CROP_FACE: True
         BACKEND: 'HC'    # HC for Haar Cascade, RF for RetinaFace
