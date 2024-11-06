@@ -147,22 +147,3 @@ class PURELoader(BaseLoader):
                      for label in labels["/FullPackage"]]
         return np.asarray(waves)
 
-if __name__ == "__main__":
-    import torch
-    from torch.utils.data import DataLoader
-    general_generator = torch.Generator()
-    general_generator.manual_seed(100)
-    
-    data_path = "C:/Users/U/Desktop/BCML/rppg/Face2PPG_pipeline/data/PURE_rPPG/"
-    pure_dataloader_dict = dict()
-    pure_dataset = PURELoader(
-        name='test',
-        data_path=data_path,
-        config_data=config_file)
-    pure_dataloader_dict['test'] = DataLoader(
-        dataset=pure_dataset,
-        num_workers=16,
-        batch_size=num_batch,
-        shuffle=False,
-        worker_init_fn=seed_worker,
-        generator=general_generator)

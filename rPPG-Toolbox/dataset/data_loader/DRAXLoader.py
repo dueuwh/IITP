@@ -13,7 +13,7 @@ from dataset.data_loader.BaseLoader import BaseLoader
 from tqdm import tqdm
 
 
-class IITPLoader(BaseLoader):
+class DRAXLoader(BaseLoader):
     """The data loader for the DRAX dataset."""
 
     def __init__(self, name, data_path, config_data):
@@ -21,46 +21,22 @@ class IITPLoader(BaseLoader):
             Args:
                 data_path(str): path of a folder which stores raw frames and bvp data.
                 e.g. data_path should be "RawData" for below dataset structure:
-                *** Numbers of frames are not start from 1000000 exactly.
-                *** All emotion folders of subjects have same structure like first 'anger' folder.
+                * some of videos have 'mov' format
                 -----------------
                      RawData/
-                     |-- frames
-                     |    |-- subject_0
-                     |         |-- anger
-                     |             |-- 1000000.jpg
-                     |             |-- 1000001.jpg
-                     |             |...
-                     |         |-- anxiety
-                     |             |-- frames like 'anger' folder
-                     |         |-- embarrassment
-                     |         |-- happy
-                     |         |-- hurt
-                     |         |-- neutral
-                     |         |-- sadness
-                     |    |-- subject_1
-                     |         |-- anger
-                     |         |-- anxiety
-                     |         |-- embarrassment
-                     |         |-- happy
-                     |         |-- hurt
-                     |         |-- neutral
-                     |         |-- sadness
+                     |-- videos
+                     |    |-- Subject1_file1.avi
+                     |    |-- Subject1_file2.avi
                      |    |...
-                     |    |-- subject_n
-                     |         |-- anger
-                     |         |-- anxiety
-                     |         |-- embarrassment
-                     |         |-- happy
-                     |         |-- hurt
-                     |         |-- neutral
-                     |         |-- sadness
+                     |    |-- SubjectN_fileN.mov
+                     |-- labels
+                     |    |-- Subject1_file1.csv
+                     |    |-- Subject1_file2.csv
+                     |    |...
+                     |    |-- SubjectN_fileN.csv
                 -----------------
                 name(string): name of the dataloader.
                 config_data(CfgNode): data settings(ref:config.py).
-                
-                config_data.emotions(list[str]): emotion list to use
-                e.g. ['happy', 'anger', 'sadness', 'neutral']
         """
         super().__init__(name, data_path, config_data)
 
@@ -69,20 +45,27 @@ class IITPLoader(BaseLoader):
         Args:
             data_path(str): C:/Users/U/Desktop/BCML/Drax/PAPER/data
         """
+        file_list = os.listdir(data_path + os.sep + "videos/")
         
-        data_dirs = glob.glob(data_path + os.sep + "frames/*_*")
-        if not data_dirs:
+        subject_names = [name.split('_')[0] for name in file_list]
+        subject_names = list(set(subject_names))
+        
+        subject_num = {}
+        for i, name in enumerate(subject_names):
+            subject_num[name] = i
+        
+        if not file_list:
             raise ValueError(f"{self.dataset_name} data path empty! <{data_path}>")
+            
         dirs = list()
-        for i, data_dir in enumerate(data_dirs):
-            for j, file_name in enumerate(os.listdir(data_dir)):
-                if file_name in self.config_data.EMOTIONS:
-                    append_path = data_dir+'/'+file_name
-                    
-                    subject_trail_val = str(i+1)+str(j+1)
-                    index = int(subject_trail_val)
-                    subject = int(i+1)
-                    dirs.append({"index":index, "path":append_path, "subject": subject})
+        for file_name in file_list:
+            append_path = data_path + os.sep + f"videos/{file_name}"
+            subject_name = file_name.split('_')[0]
+            subject_file_num = file_name.split('_')[1]
+            subject_trail_val = str(subject_num[subject_name]+1)+subject_file_num
+            index = int(subject_trail_val)
+            subject = int(subject_num[subject_name]+1)
+            dirs.append({"index":index, "path":append_path, "subject": subject})
         return dirs
 
     def split_raw_data(self, data_dirs, begin, end):
