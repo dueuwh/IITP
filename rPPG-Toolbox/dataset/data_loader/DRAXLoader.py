@@ -9,6 +9,7 @@ from multiprocessing import Pool, Process, Value, Array, Manager
 
 import cv2
 import numpy as np
+import pandas as pd
 from dataset.data_loader.BaseLoader import BaseLoader
 from tqdm import tqdm
 
@@ -115,24 +116,24 @@ class DRAXLoader(BaseLoader):
     def read_video(frame_dir):
         """Reads a video file, returns frames(T, H, W, 3) """
         frames = list()
-        img_list = sorted(os.listdir(frame_dir))
-        for img in img_list:
-            frame = cv2.imread(frame_dir+'/'+img)
-            if frame.shape[0] == 720:
-                frame = frame[60:660, 80:680, :]
-            else:
-                frame = frame[:, 140:-140, :]
+        cap = cv2.VideoCapture(frame_dir)
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = cv2.resize(frame, (0, 0), fx=0.9, fy=0.9, interpolation=cv2.INTER_CUBIC)
+            # frame = cv2.resize(frame, (0, 0), fx=0.9, fy=0.9, interpolation=cv2.INTER_CUBIC)
             frames.append(frame)
         return np.asarray(frames)
 
     @staticmethod
     def read_wave(frame_dir):
         """Reads a bvp signal file."""
-        ppg_dir = frame_dir.replace("frames", "labels")+'.npy'
-        bvp = np.load(ppg_dir)
-        return bvp
+        label_dir = frame_dir.split("\\")[0] + "/labels/"
+        file_name_elements = frame_dir.split('/')[-1].split('_')
+        ecg_file_path = f"{label_dir}{file_name_elements[0]}_{file_name_elements[1]}.csv"
+        ecg_file = pd.read_csv(ppg_file_path, index_col=0)["ECG"].dropna().to_numpy()
+        return ecg_file
 
     
     
