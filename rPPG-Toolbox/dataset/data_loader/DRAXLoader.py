@@ -46,7 +46,7 @@ class DRAXLoader(BaseLoader):
         Args:
             data_path(str): C:/Users/U/Desktop/BCML/Drax/PAPER/data
         """
-        file_list = os.listdir(data_path + os.sep + "videos/")
+        file_list = os.listdir(data_path + os.sep + "frames/")
         
         subject_names = [name.split('_')[0] for name in file_list]
         subject_names = list(set(subject_names))
@@ -60,7 +60,7 @@ class DRAXLoader(BaseLoader):
             
         dirs = list()
         for file_name in file_list:
-            append_path = data_path + os.sep + f"videos/{file_name}"
+            append_path = data_path + os.sep + f"frames/{file_name}"
             subject_name = file_name.split('_')[0]
             subject_file_num = file_name.split('_')[1]
             subject_trail_val = str(subject_num[subject_name]+1)+subject_file_num
@@ -127,8 +127,17 @@ class DRAXLoader(BaseLoader):
     @staticmethod
     def read_wave(frame_dir):
         """Reads a ecg signal file."""
-        ecg_dir = f"{frame_dir.replace('frames', 'labels_synchro')}.npy"
-        ecg = np.load(ecg_dir)
+        ecg_dir = frame_dir.replace('frames', 'labels_synchro')
+        path_elements = ecg_dir.split('/')
+        good_path = ' '
+        for i, element in enumerate(path_elements[:-1]):
+            if i == 0:
+                good_path = element + '/'
+            else:
+                good_path += element + '/'
+        good_path = good_path + path_elements[-1][:5]+".npy"
+        good_path = good_path.replace('\\', '/')
+        ecg_file = np.load(good_path)
         return ecg_file
 
     
