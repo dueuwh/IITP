@@ -120,7 +120,7 @@ class DRAXLoader(BaseLoader):
         for img in img_list:
             frame = cv2.imread(f"{frame_dir}/{img}")
             # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # frame = cv2.resize(frame, (0, 0), fx=0.9, fy=0.9, interpolation=cv2.INTER_CUBIC)
+            frame = cv2.resize(frame, (0, 0), fx=0.9, fy=0.9, interpolation=cv2.INTER_CUBIC)
             frames.append(frame)
         return np.asarray(frames)
 
