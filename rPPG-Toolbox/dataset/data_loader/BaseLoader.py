@@ -60,6 +60,8 @@ class BaseLoader(Dataset):
         self.do_preprocess = config_data.DO_PREPROCESS
         self.config_data = config_data
 
+        self.original_name = []
+
         assert (config_data.BEGIN < config_data.END)
         assert (config_data.BEGIN > 0 or config_data.BEGIN == 0)
         assert (config_data.END < 1 or config_data.END == 1)
@@ -414,9 +416,9 @@ class BaseLoader(Dataset):
         bvps_clips = [bvps[i * chunk_length:(i + 1) * chunk_length] for i in range(clip_num)]
         return np.array(frames_clips), np.array(bvps_clips)
 
-    def save(self, frames_clips, bvps_clips, filename):
+    def save(self, frames_clips, bvps_clips, filename, original_file_name):
         """Save all the chunked data.
-
+ 
         Args:
             frames_clips(np.array): blood volumne pulse (PPG) labels.
             bvps_clips(np.array): the length of each chunk.
@@ -430,8 +432,8 @@ class BaseLoader(Dataset):
         count = 0
         for i in range(len(bvps_clips)):
             assert (len(self.inputs) == len(self.labels))
-            input_path_name = self.cached_path + os.sep + "{0}_input{1}.npy".format(filename, str(count))
-            label_path_name = self.cached_path + os.sep + "{0}_label{1}.npy".format(filename, str(count))
+            input_path_name = self.cached_path + os.sep + "{2}_{0}_input{1}.npy".format(filename, str(count), original_file_name)
+            label_path_name = self.cached_path + os.sep + "{2}_{0}_label{1}.npy".format(filename, str(count), original_file_name)
             self.inputs.append(input_path_name)
             self.labels.append(label_path_name)
             np.save(input_path_name, frames_clips[i])
@@ -439,7 +441,7 @@ class BaseLoader(Dataset):
             count += 1
         return count
 
-    def save_multi_process(self, frames_clips, bvps_clips, filename):
+    def save_multi_process(self, frames_clips, bvps_clips, filename, original_file_name):
         """Save all the chunked data with multi-thread processing.
 
         Args:
@@ -457,8 +459,8 @@ class BaseLoader(Dataset):
         label_path_name_list = []
         for i in range(len(bvps_clips)):
             assert (len(self.inputs) == len(self.labels))
-            input_path_name = self.cached_path + os.sep + "{0}_input{1}.npy".format(filename, str(count))
-            label_path_name = self.cached_path + os.sep + "{0}_label{1}.npy".format(filename, str(count))
+            input_path_name = self.cached_path + os.sep + "{2}_{0}_input{1}.npy".format(filename, str(count), original_file_name)
+            label_path_name = self.cached_path + os.sep + "{2}_{0}_label{1}.npy".format(filename, str(count), original_file_name)
             input_path_name_list.append(input_path_name)
             label_path_name_list.append(label_path_name)
             np.save(input_path_name, frames_clips[i])
