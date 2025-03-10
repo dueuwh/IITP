@@ -1,3 +1,4 @@
+# core libraries
 import os
 import sys
 import numpy as np
@@ -5,8 +6,14 @@ import pandas as pd
 from copy import deepcopy
 import matplotlib.pyplot as plt
 
+# torch libraries
+import torch
+from torch.utils.data import Dataset
+from torchvision import datasets
+from torchvision.transforms import ToTensor
 
-
+# video libraries
+import cv2
 
 def split_ecg():
     base_path = "D:/home/BCML/IITP/data/16channel_Emotion/preprocessing_data/ecg/filtered_ecg_signals.csv"
@@ -15,6 +22,7 @@ def split_ecg():
         select_index = np.array(deepcopy(file.loc[index]))
         select_index = select_index[:, 1]
         np.save(f"D:/home/BCML/IITP/data/16channel_Emotion/preprocessing_data/ecg/ecg_{index}.npy", select_index)
+
 
 if __name__ == "__main__":
     split_ecg()
