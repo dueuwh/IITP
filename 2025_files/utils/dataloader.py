@@ -60,7 +60,9 @@ class MultiModalDataset(Dataset):
                 160_2.npy
                 ...
                 16n_n.npy
+    
     """
+    
     def __init__(self, video_data, time_series_data, text_data, labels, text_tokenizer):
         self.video_data = video_data
         self.time_series_data = time_series_data
@@ -93,22 +95,10 @@ class MultiModalDataset(Dataset):
             'text': text_tensor,
             'label': label_tensor
         }
+    
+    def __match_length(self):
+        self.video_data
 
-
-def text_tokenizer(text):
-    """
-    A simple text tokenizer that converts text into a tensor.
-    This is a placeholder and should be replaced with a proper tokenizer (e.g., from Hugging Face's tokenizers).
-
-    Args:
-        text (str): The input text.
-
-    Returns:
-        torch.Tensor: A tensor representation of the tokenized text.
-    """
-    # Convert text into a sequence of ASCII values (just for demonstration purposes)
-    tokenized = [ord(char) for char in text]
-    return torch.tensor(tokenized, dtype=torch.long)
 
 if __name__ == "__main__":
     split_ecg()
