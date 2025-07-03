@@ -66,7 +66,8 @@ class DRAXLoader(BaseLoader):
             subject_trail_val = str(subject_num[subject_name]+1)+subject_file_num
             index = int(subject_trail_val)
             subject = int(subject_num[subject_name]+1)
-            dirs.append({"index":index, "path":append_path, "subject": subject})
+            dirs.append({"index":index, "path":append_path, "subject": subject, "original_name": file_name})
+        
         return dirs
 
     def split_raw_data(self, data_dirs, begin, end):
@@ -87,6 +88,7 @@ class DRAXLoader(BaseLoader):
         """ invoked by preprocess_dataset for multi_process."""
         filename = os.path.split(data_dirs[i]['path'])[-1]
         saved_filename = data_dirs[i]['index']
+        original_file_name = data_dirs[i]["original_name"]
 
         # Read Frames
         if 'None' in config_preprocess.DATA_AUG:
@@ -106,7 +108,7 @@ class DRAXLoader(BaseLoader):
             bvps = self.read_wave(data_dirs[i]['path'])
             
         frames_clips, bvps_clips = self.preprocess(frames, bvps, config_preprocess)
-        input_name_list, label_name_list = self.save_multi_process(frames_clips, bvps_clips, saved_filename)
+        input_name_list, label_name_list = self.save_multi_process(frames_clips, bvps_clips, saved_filename, original_file_name)
         # input_name_list, label_name_list = self.save(frames_clips, bvps_clips, saved_filename)
         file_list_dict[i] = input_name_list
         
@@ -127,7 +129,7 @@ class DRAXLoader(BaseLoader):
     @staticmethod
     def read_wave(frame_dir):
         """Reads a ecg signal file."""
-        ecg_dir = frame_dir.replace('frames', 'labels_synchro')
+        ecg_dir = frame_dir.replace('frames', 'labels_synchro_hr')
         path_elements = ecg_dir.split('/')
         good_path = ' '
         for i, element in enumerate(path_elements[:-1]):

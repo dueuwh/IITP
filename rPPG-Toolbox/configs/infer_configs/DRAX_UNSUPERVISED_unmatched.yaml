@@ -5,11 +5,19 @@ UNSUPERVISED:
   METRICS: ['MAE', 'RMSE', 'MAPE', 'Pearson', 'SNR', 'BA', 'MACC']
   DATA:
     FS: 30
+<<<<<<< HEAD:rPPG-Toolbox/configs/infer_configs/DRAX_UNSUPERVISED_unmatched.yaml
     DATASET: IITP
     DO_PREPROCESS: True               # if first time, should be true
     DATA_FORMAT: NDHWC
     DATA_PATH: "C:/Users/U/Desktop/BCML/Drax/PAPER/data/synchro"                                 # Raw dataset path, need to be updated
     CACHED_PATH: "C:/Users/U/Desktop/BCML/IITP/IITP_2025/data/synchro_preprocessed4toolbox"    # Processed dataset save path, need to be updated
+=======
+    DATASET: DRAX
+    DO_PREPROCESS: False               # if first time, should be true
+    DATA_FORMAT: NDHWC
+    DATA_PATH: "D:/home/BCML/drax/PAPER/data/treadmill_dataset"                                 # Raw dataset path, need to be updated
+    CACHED_PATH: "D:/home/BCML/drax/PAPER/data/treadmill_dataset/rppg_toolbox/preprocess4hr_6sec_plot"    # Processed dataset save path, need to be updated
+>>>>>>> c6e02dfe51c3f5472406ffd1c39716bf3f1a0323:rPPG-Toolbox/configs/infer_configs/DRAX_UNSUPERVISED.yaml
     EXP_DATA_NAME: "datafiles"
     BEGIN: 0.0
     END: 1.0
@@ -18,7 +26,7 @@ UNSUPERVISED:
       DATA_AUG: ['None']    # 'None' or 'Motion' is supported, used if the data path points to an augmented dataset or requires augmentation
       LABEL_TYPE: Raw
       DO_CHUNK: TRUE
-      CHUNK_LENGTH: 900     # Number of frames, currently set to 30*30 = 900 (30sec)
+      CHUNK_LENGTH: 180     # Number of frames, currently set to 30*6 = 180 (6sec)
       CROP_FACE:
         DO_CROP_FACE: True
         BACKEND: 'HC'    # HC for Haar Cascade, RF for RetinaFace
@@ -37,5 +45,9 @@ INFERENCE:
     USE_SMALLER_WINDOW: False        # Change this if you'd like an evaluation window smaller than the test video length
     WINDOW_SIZE: 10        # In seconds
   SAVE_BVP: True
+<<<<<<< HEAD:rPPG-Toolbox/configs/infer_configs/DRAX_UNSUPERVISED_unmatched.yaml
   SAVE_PATH: "C:/Users/U/Desktop/BCML/IITP/IITP_2025/data/synchro_rppg"
+=======
+  SAVE_PATH: "D:/home/BCML/drax/PAPER/data/treadmill_dataset/results/rppg_toolbox_hr_11th_asf_1"
+>>>>>>> c6e02dfe51c3f5472406ffd1c39716bf3f1a0323:rPPG-Toolbox/configs/infer_configs/DRAX_UNSUPERVISED.yaml
   
