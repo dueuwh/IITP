@@ -62,6 +62,7 @@ def add_args(parser):
       UBFC-rPPG_UNSUPERVISED.yaml
       IITP_UNSUPERVISED.yaml
       DRAX_UNSUPERVISED.yaml
+      DEAP_UNSUPERVISED.yaml
     '''
     return parser
 
@@ -167,10 +168,12 @@ if __name__ == "__main__":
             train_loader = data_loader.IITPLoader.IITPLoader
         elif config.TRAIN.DATA.DATASET == "DRAX":
             train_loader = data_loader.DRAXLoader.DRAXLoader
+        elif config.TRAIN.DATA.DATASET == "DEAP":
+            train_loader = data_loader.DEAPLoader.DEAPLoader
         else:
             raise ValueError("Unsupported dataset! Currently supporting UBFC-rPPG, PURE, MMPD, \
                              SCAMPS, BP4D+ (Normal and BigSmall preprocessing), UBFC-PHYS, iBVP \
-                                 IITP and DRAX")
+                                 IITP, DRAX and DEAP")
 
         # Create and initialize the train dataloader given the correct toolbox mode,
         # a supported dataset name, and a valid dataset paths
@@ -212,12 +215,14 @@ if __name__ == "__main__":
             valid_loader = data_loader.IITPLoader.IITPLoader
         elif config.VALID.DATA.DATASET == "DRAX":
             valid_loader = data_loader.DRAXLoader.DRAXLoader
+        elif config.VALID.DATA.DATASET == "DEAP":
+            valid_loader = data_loader.DEAPLoader.DEAPLoader
         elif config.VALID.DATA.DATASET is None and not config.TEST.USE_LAST_EPOCH:
             raise ValueError("Validation dataset not specified despite USE_LAST_EPOCH set to False!")
         else:
             raise ValueError("Unsupported dataset! Currently supporting UBFC-rPPG, PURE, MMPD, \
                              SCAMPS, BP4D+ (Normal and BigSmall preprocessing), UBFC-PHYS iBVP, \
-                                 IITP, and DRAX")
+                                 IITP, DRAX and DEAP")
         
         # Create and initialize the valid dataloader given the correct toolbox mode,
         # a supported dataset name, and a valid dataset path
@@ -259,10 +264,12 @@ if __name__ == "__main__":
             test_loader = data_loader.IITPLoader.IITPLoader
         elif config.TEST.DATA.DATASET == "DRAX":
             test_loader = data_loader.DRAXLoader.DRAXLoader
+        elif config.TEST.DATA.DATASET == "DEAP":
+            test_loader = data_loader.DEAPLoader.DEAPLoader
         else:
             raise ValueError("Unsupported dataset! Currently supporting UBFC-rPPG, PURE, MMPD, \
                              SCAMPS, BP4D+ (Normal and BigSmall preprocessing), UBFC-PHYS, iBVP \
-                                 IITP and DRAX.")
+                                 IITP, DRAX and DEAP.")
         
         if config.TOOLBOX_MODE == "train_and_test" and config.TEST.USE_LAST_EPOCH:
             print("Testing uses last epoch, validation dataset is not required.", end='\n\n')   
@@ -304,9 +311,11 @@ if __name__ == "__main__":
             unsupervised_loader = data_loader.IITPLoader.IITPLoader
         elif config.UNSUPERVISED.DATA.DATASET == "DRAX":
             unsupervised_loader = data_loader.DRAXLoader.DRAXLoader
+        elif config.UNSUPERVISED.DATA.DATASET == "DEAP":
+            unsupervised_loader = data_loader.DEAPLoader.DEAPLoader
         else:
             raise ValueError("Unsupported dataset! Currently supporting UBFC-rPPG, PURE, MMPD, \
-                             SCAMPS, BP4D+, UBFC-PHYS, iBVP, IITP and DRAX.")
+                             SCAMPS, BP4D+, UBFC-PHYS, iBVP, IITP, DRAX and DEAP.")
         
         unsupervised_data = unsupervised_loader(
             name="unsupervised",

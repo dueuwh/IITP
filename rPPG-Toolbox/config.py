@@ -347,7 +347,7 @@ _C.INFERENCE.EVALUATION_WINDOW.USE_SMALLER_WINDOW = False
 _C.INFERENCE.EVALUATION_WINDOW.WINDOW_SIZE = 10
 _C.INFERENCE.MODEL_PATH = ''
 _C.INFERENCE.SAVE_BVP = True
-_C.INFERENCE.SAVE_PATH = "C:/Users/U/Desktop/BCML/IITP/IITP_emotions/data/senior/sychro/results/rppg_toolbox/total/bvp"
+_C.INFERENCE.SAVE_PATH = "C:/Users/U/Desktop/BCML/IITP/IITP_old/IITP_emotions/data/senior/sychro/results/rppg_toolbox/bvp"
 # -----------------------------------------------------------------------------
 # Device settings
 # -----------------------------------------------------------------------------

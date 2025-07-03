@@ -27,34 +27,34 @@ class IITPLoader(BaseLoader):
                      RawData/
                      |-- frames
                      |    |-- subject_0
-                     |         |-- anger
+                     |        |-- anger
                      |             |-- 1000000.jpg
                      |             |-- 1000001.jpg
                      |             |...
-                     |         |-- anxiety
+                     |        |-- anxiety
                      |             |-- frames like 'anger' folder
-                     |         |-- embarrassment
-                     |         |-- happy
-                     |         |-- hurt
-                     |         |-- neutral
-                     |         |-- sadness
-                     |    |-- subject_1
-                     |         |-- anger
-                     |         |-- anxiety
-                     |         |-- embarrassment
-                     |         |-- happy
-                     |         |-- hurt
-                     |         |-- neutral
-                     |         |-- sadness
-                     |    |...
-                     |    |-- subject_n
-                     |         |-- anger
-                     |         |-- anxiety
-                     |         |-- embarrassment
-                     |         |-- happy
-                     |         |-- hurt
-                     |         |-- neutral
-                     |         |-- sadness
+                     |        |-- embarrassment
+                     |        |-- happy
+                     |        |-- hurt
+                     |        |-- neutral
+                     |             |-- sadness
+                     |        |-- subject_1
+                     |             |-- anger
+                     |             |-- anxiety
+                     |             |-- embarrassment
+                     |             |-- happy
+                     |             |-- hurt
+                     |             |-- neutral
+                     |             |-- sadness
+                     |        |...
+                     |        |-- subject_n
+                     |             |-- anger
+                     |             |-- anxiety
+                     |             |-- embarrassment
+                     |             |-- happy
+                     |             |-- hurt
+                     |             |-- neutral
+                     |             |-- sadness
                      |-- labels
                      |    |-- subject_0
                      |         |-- anger.npy

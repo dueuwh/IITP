@@ -6,7 +6,7 @@ UNSUPERVISED:
   DATA:
     FS: 30
     DATASET: PURE
-    DO_PREPROCESS: True               # if first time, should be true
+    DO_PREPROCESS: False               # if first time, should be true
     DATA_FORMAT: NDHWC
     DATA_PATH: "C:/Users/U/Desktop/BCML/rppg/Face2PPG_pipeline/data/PURE_rPPG"                     # Raw dataset path, need to be updated
     CACHED_PATH: "C:/Users/U/Desktop/BCML/rppg/Face2PPG_pipeline/data/pure_rppgtoolbox_output"    # Processed dataset save path, need to be updated

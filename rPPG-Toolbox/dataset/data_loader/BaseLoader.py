@@ -23,6 +23,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 from tqdm import tqdm
 from retinaface import RetinaFace   # Source code: https://github.com/serengil/retinaface
+from dataset.data_loader.mediapipe_facemesh import mp_facemesh  # mediapipe face/skin detection
 
 
 class BaseLoader(Dataset):
@@ -277,21 +278,13 @@ class BaseLoader(Dataset):
         """
         if backend == "HC":
             # Use OpenCV's Haar Cascade algorithm implementation for face detection
-            # This should only utilize the CPU
             detector = cv2.CascadeClassifier(
             './dataset/haarcascade_frontalface_default.xml')
-
-            # Computed face_zone(s) are in the form [x_coord, y_coord, width, height]
-            # (x,y) corresponds to the top-left corner of the zone to define using
-            # the computed width and height.
             face_zone = detector.detectMultiScale(frame)
-
             if len(face_zone) < 1:
                 print("ERROR: No Face Detected")
                 face_box_coor = [0, 0, frame.shape[0], frame.shape[1]]
             elif len(face_zone) >= 2:
-                # Find the index of the largest face zone
-                # The face zones are boxes, so the width and height are the same
                 max_width_index = np.argmax(face_zone[:, 2])  # Index of maximum width
                 face_box_coor = face_zone[max_width_index]
                 print("Warning: More than one faces are detected. Only cropping the biggest one.")
@@ -299,40 +292,26 @@ class BaseLoader(Dataset):
                 face_box_coor = face_zone[0]
         elif backend == "RF":
             # Use a TensorFlow-based RetinaFace implementation for face detection
-            # This utilizes both the CPU and GPU
             res = RetinaFace.detect_faces(frame)
-
             if len(res) > 0:
-                # Pick the highest score
                 highest_score_face = max(res.values(), key=lambda x: x['score'])
                 face_zone = highest_score_face['facial_area']
-
-                # This implementation of RetinaFace returns a face_zone in the
-                # form [x_min, y_min, x_max, y_max] that corresponds to the 
-                # corners of a face zone
                 x_min, y_min, x_max, y_max = face_zone
-
-                # Convert to this toolbox's expected format
-                # Expected format: [x_coord, y_coord, width, height]
                 x = x_min
                 y = y_min
                 width = x_max - x_min
                 height = y_max - y_min
-
-                # Find the center of the face zone
                 center_x = x + width // 2
                 center_y = y + height // 2
-                
-                # Determine the size of the square (use the maximum of width and height)
                 square_size = max(width, height)
-                
-                # Calculate the new coordinates for a square face zone
                 new_x = center_x - (square_size // 2)
                 new_y = center_y - (square_size // 2)
                 face_box_coor = [new_x, new_y, square_size, square_size]
             else:
                 print("ERROR: No Face Detected")
                 face_box_coor = [0, 0, frame.shape[0], frame.shape[1]]
+        elif backend == "MP":
+            face_box_coor = mp_facemesh.get_face_bbox(frame)
         else:
             raise ValueError("Unsupported face detection backend!")
 
@@ -394,6 +373,10 @@ class BaseLoader(Dataset):
                     face_region = face_region_all[reference_index]
                 frame = frame[max(face_region[1], 0):min(face_region[1] + face_region[3], frame.shape[0]),
                         max(face_region[0], 0):min(face_region[0] + face_region[2], frame.shape[1])]
+                # (Optional) Apply mediapipe skin mask if using MP backend
+                if backend == "MP":
+                    skin_mask = mp_facemesh.get_skin_mask(frame)
+                    frame = cv2.bitwise_and(frame, frame, mask=skin_mask)
             resized_frames[i] = cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
         return resized_frames
 

@@ -8,7 +8,7 @@ I added some dataset functions for IITP project to utilize pretrained/unsupervis
 ***
    
    
-<p align="center">
+<p align="center"
 :fire: Please remember to :star: this repo if you find it useful and cite our work if you end up using it in your work! :fire:
 </p>
 <p align="center">
